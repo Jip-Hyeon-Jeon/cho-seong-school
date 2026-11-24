@@ -1,6 +1,6 @@
-package view;
+package com.jiphyeonjeon.choseongschool.view;
 
-import controller.LoginController;
+import com.jiphyeonjeon.choseongschool.controller.LoginController;
 
 import javax.swing.*;
 import javax.swing.border.CompoundBorder;

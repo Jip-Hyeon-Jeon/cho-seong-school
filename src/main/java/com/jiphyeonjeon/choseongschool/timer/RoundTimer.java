@@ -1,4 +1,4 @@
-package timer;
+package com.jiphyeonjeon.choseongschool.timer;
 
 public class RoundTimer implements Runnable {
 

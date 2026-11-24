@@ -1,4 +1,4 @@
-package timer;
+package com.jiphyeonjeon.choseongschool.timer;
 
 public interface TimerListener {
     void onTick(int remainingSeconds); // 1초마다 남은 시간 알림

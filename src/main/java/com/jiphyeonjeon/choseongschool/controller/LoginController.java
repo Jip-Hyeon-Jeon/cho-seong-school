@@ -1,6 +1,6 @@
-package controller;
+package com.jiphyeonjeon.choseongschool.controller;
 
-import view.LoginView;
+import com.jiphyeonjeon.choseongschool.view.LoginView;
 
 import javax.swing.*;
 
