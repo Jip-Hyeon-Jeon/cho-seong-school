@@ -53,8 +53,8 @@ public class LobbyView extends JPanel {
         setLayout(null);
         setPreferredSize(new Dimension(WIDTH, HEIGHT));
         setBackground(PAPER);
-        // PR #1의 순서: 세종, 사임당, 율곡, 퇴계, 정약용.
-        // 정약용 리소스가 없는 4번의 임시 표시
+        // 로그인 순서: 세종, 사임당, 율곡, 퇴계, 이순신.
+        // 이순신(ch4.png)은 초상 교체 PR #10 병합 후 {0, 3, 2, 1, 4}로 연결
         int[] files = {0, 3, 2, 1};
         for (int i = 0; i < files.length; i++) {
             try {
