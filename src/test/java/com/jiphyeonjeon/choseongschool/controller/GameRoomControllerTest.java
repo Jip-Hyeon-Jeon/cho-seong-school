@@ -48,6 +48,16 @@ class GameRoomControllerTest {
         public void showRoundEnd(String answer, String meaning) {
             calls.add("E:" + answer + "," + meaning);
         }
+
+        @Override
+        public void jump(String nickname) {
+            calls.add("J:" + nickname);
+        }
+
+        @Override
+        public void setInputEnabled(boolean enabled) {
+            calls.add("I:" + enabled);
+        }
     }
 
     private final RecordingView view = new RecordingView();
@@ -70,7 +80,8 @@ class GameRoomControllerTest {
     @Test
     void 서버_메시지를_화면에_그린다() throws Exception {
         handleAll("QUESTION|ㅅㅍㄱㅈ", "HINT|", "ANSWER|유나|사필귀정|O", "ANSWER|지수|사필귀점|X");
-        assertEquals(List.of("Q:ㅅㅍㄱㅈ", "H:", "A:유나,사필귀정,true", "A:지수,사필귀점,false"), view.calls);
+        assertEquals(List.of("Q:ㅅㅍㄱㅈ", "I:true", "H:", "A:유나,사필귀정,true", "J:유나", "I:false",
+                "A:지수,사필귀점,false"), view.calls);
     }
 
     @Test
@@ -82,8 +93,8 @@ class GameRoomControllerTest {
     @Test
     void 게임_진행_메시지를_화면에_그린다() throws Exception {
         handleAll("ROUND|3|10", "TIME|30|30", "TIME|7|30", "SCORE|유나|120", "ROUND_END|사필귀정|모든 일은 반드시 바른 길로 돌아감");
-        assertEquals(List.of("R:3/10", "T:30/30", "T:7/30", "S:유나,120", "E:사필귀정,모든 일은 반드시 바른 길로 돌아감"),
-                view.calls);
+        assertEquals(List.of("R:3/10", "T:30/30", "T:7/30", "S:유나,120", "E:사필귀정,모든 일은 반드시 바른 길로 돌아감",
+                "I:false"), view.calls);
     }
 
     @Test
@@ -101,6 +112,18 @@ class GameRoomControllerTest {
                 new GameRoomController.FinalScore("유나", 300),
                 new GameRoomController.FinalScore("지수", 300),
                 new GameRoomController.FinalScore("서영", 120))), ended);
+    }
+
+    @Test
+    void 오답은_점프하지_않고_입력도_잠그지_않는다() throws Exception {
+        handleAll("ANSWER|지수|사필귀점|X", "ANSWER|서영|사필귀정|X");
+        assertEquals(List.of("A:지수,사필귀점,false", "A:서영,사필귀정,false"), view.calls);
+    }
+
+    @Test
+    void 게임이_끝나면_입력을_잠근다() throws Exception {
+        handleAll("GAME_END|유나|300");
+        assertEquals(List.of("I:false"), view.calls);
     }
 
     @Test

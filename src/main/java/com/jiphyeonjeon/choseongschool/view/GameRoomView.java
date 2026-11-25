@@ -29,6 +29,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
+import javax.swing.Timer;
 
 /**
  * 게임 화면 (Figma "4 게임 (한국풍)", 1200×740).
@@ -134,24 +135,47 @@ public class GameRoomView extends JPanel {
         setRound(round, totalRounds, roundInfo);
     }
 
-    /** 라운드 종료: 귀띔 자리에 정답과 뜻을 보여준다 (정답 공개·점프 연출은 #16에서 다듬는다) */
+    /** 라운드 종료: 두루마리에 정답을 청록색으로 띄우고 귀띔 자리에 뜻풀이를 보여준다. 다음 showQuestion에서 원래대로 돌아간다 */
     public void showRoundEnd(String answer, String meaning) {
-        showHint(meaning.isEmpty() ? "정답: " + answer : "정답: " + answer + " · " + meaning);
+        setScrollText(answer, Theme.JADE);
+        showHint(meaning);
     }
 
     /** 새 문제 (초성이 섞인 문장). 힌트와 말풍선은 비운다 */
     public void showQuestion(String question) {
-        // 두루마리 높이가 고정이라 줄을 바꾸지 않고, 길면 한 줄에 들어가게 글씨를 줄인다
+        setScrollText(question, Theme.INK);
+        showHint("");
+        for (Seat seat : seats.values()) {
+            seat.setBubble("", null);
+        }
+    }
+
+    /** 두루마리 글자. 높이가 고정이라 줄을 바꾸지 않고, 길면 한 줄에 들어가게 글씨를 줄인다 */
+    private void setScrollText(String text, Color color) {
         Font font = Theme.hahmlet(QUESTION_FONT_SIZE);
-        int width = questionLabel.getFontMetrics(font).stringWidth(question);
+        int width = questionLabel.getFontMetrics(font).stringWidth(text);
         if (width > QUESTION_MAX_WIDTH) {
             font = font.deriveFont(QUESTION_FONT_SIZE * QUESTION_MAX_WIDTH / width);
         }
         questionLabel.setFont(font);
-        questionLabel.setText(question);
-        showHint("");
-        for (Seat seat : seats.values()) {
-            seat.setBubble("", null);
+        questionLabel.setForeground(color);
+        questionLabel.setText(text);
+    }
+
+    /** 정답을 맞힌 학동이 깡총 뛴다 */
+    public void jump(String nickname) {
+        Seat seat = seats.get(nickname);
+        if (seat != null) {
+            seat.jump();
+        }
+    }
+
+    /** 답안 입력창·제출 버튼 잠금/해제 (정답이 나온 뒤 ~ 다음 문제 전, 게임 종료 후에는 잠근다) */
+    public void setInputEnabled(boolean enabled) {
+        inputField.setEnabled(enabled);
+        sendButton.setEnabled(enabled);
+        if (enabled) {
+            inputField.requestFocusInWindow();
         }
     }
 
@@ -328,6 +352,14 @@ public class GameRoomView extends JPanel {
     /** 학동 한 명: 말풍선 · 캐릭터 · 방석 · 명패 · 점수 */
     private static final class Seat extends JPanel {
 
+        /** 점프 높이(px). 캐릭터 위에 이만큼 자리를 비워 두고, 뛸 때 위·아래 여백을 바꿔 높이가 변하지 않게 한다 */
+        private static final int JUMP_HEIGHT = 14;
+        /** 점프 전체 시간(ms)과 횟수: 0.7초 동안 두 번 깡총 */
+        private static final int JUMP_MILLIS = 700;
+        private static final int JUMP_HOPS = 2;
+        /** 애니메이션 한 프레임 간격(ms, 약 60fps) */
+        private static final int FRAME_MILLIS = 16;
+
         private final RoundBox bubble = new RoundBox(Theme.PAPER, Theme.PAPER_LINE, 1.5f, 20);
         private final JLabel bubbleLabel = label("", Theme.batangBold(15), Theme.INK);
         private final JLabel avatarLabel;
@@ -345,6 +377,7 @@ public class GameRoomView extends JPanel {
             setBubble("", null);
 
             avatarLabel = new JLabel(Theme.icon(avatar.imageName()));
+            setLift(0);
 
             RoundBox nameplate = new RoundBox(Theme.WOOD, Theme.WOOD_DARK, 2, 8);
             nameplate.setLayout(new FlowLayout(FlowLayout.CENTER, 6, 0));
@@ -358,14 +391,38 @@ public class GameRoomView extends JPanel {
             score.add(scoreLabel);
 
             add(bubble);
-            add(Box.createVerticalStrut(4));
-            add(centered(avatarLabel));
+            add(centered(avatarLabel)); // 점프 여백(JUMP_HEIGHT)이 말풍선과의 간격을 겸한다
             add(Box.createVerticalStrut(4));
             add(centered(new JLabel(Theme.icon("cushion"))));
             add(Box.createVerticalStrut(4));
             add(hug(nameplate));
             add(Box.createVerticalStrut(4));
             add(hug(score));
+        }
+
+        private Timer jumpTimer;
+
+        /** |sin| 곡선으로 JUMP_HOPS번 뛰었다가 제자리로 돌아온다. 뛰는 중에 다시 부르면 처음부터 */
+        void jump() {
+            if (jumpTimer != null) {
+                jumpTimer.stop();
+            }
+            long start = System.currentTimeMillis();
+            Timer timer = new Timer(FRAME_MILLIS, null);
+            timer.addActionListener(e -> {
+                double t = Math.min(1.0, (System.currentTimeMillis() - start) / (double) JUMP_MILLIS);
+                setLift((int) Math.round(JUMP_HEIGHT * Math.abs(Math.sin(Math.PI * JUMP_HOPS * t))));
+                if (t >= 1.0) {
+                    timer.stop();
+                }
+            });
+            jumpTimer = timer;
+            timer.start();
+        }
+
+        /** 캐릭터를 lift만큼 올린다. 위·아래 여백 합이 항상 JUMP_HEIGHT라 자리 크기는 그대로다 */
+        private void setLift(int lift) {
+            avatarLabel.setBorder(BorderFactory.createEmptyBorder(JUMP_HEIGHT - lift, 0, lift, 0));
         }
 
         /** 빈 말풍선은 자리만 차지하고 보이지 않는다 */
@@ -446,7 +503,7 @@ public class GameRoomView extends JPanel {
         @Override
         protected void paintComponent(Graphics g) {
             Graphics2D g2 = smooth(g);
-            g2.setColor(getModel().isPressed() ? Theme.SEAL_LINE : Theme.SEAL);
+            g2.setColor(!isEnabled() ? Theme.PAPER_LINE : getModel().isPressed() ? Theme.SEAL_LINE : Theme.SEAL);
             g2.fillRoundRect(0, 0, getWidth(), getHeight(), 12, 12);
             g2.setColor(Theme.SEAL_LINE);
             g2.setStroke(new BasicStroke(2));
