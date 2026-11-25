@@ -22,6 +22,8 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-webmvc' 
 	testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+	// 실제 MariaDB 설정 없이 실행하는 Spring 컨텍스트 검사 전용 DB
+	testRuntimeOnly 'com.h2database:h2'
 	
 	//Spring Data JPA
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
@@ -33,4 +35,11 @@ dependencies {
 
 tasks.named('test') {
 	useJUnitPlatform()
+	systemProperty 'java.awt.headless', 'true'
+}
+
+tasks.register('runLobbyServer', JavaExec) {
+	classpath = sourceSets.main.runtimeClasspath
+	mainClass = 'com.jiphyeonjeon.choseongschool.lobby.server.LobbyServer'
+	standardInput = System.in
 }
