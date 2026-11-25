@@ -31,13 +31,38 @@ public final class GameConstants {
     /** [클라이언트] 화면(윈도우) 관련 상수 */
     public static final class Screen {
 
-        /** 게임 화면 가로 크기 (px) */
-        public static final int WIDTH = 1600;
+        /** 게임 화면 가로 크기 (px, Figma 시안 기준) */
+        public static final int WIDTH = 1200;
 
-        /** 게임 화면 세로 크기 (px) */
-        public static final int HEIGHT = 900;
+        /** 게임 화면 세로 크기 (px, Figma 시안 기준) */
+        public static final int HEIGHT = 740;
 
         private Screen() {
+        }
+    }
+
+    /** [공용] 서버-클라이언트 메시지 형식 (예: ANSWER|닉네임|단어|O) */
+    public static final class Protocol {
+
+        /** 메시지 구분자 */
+        public static final String SEPARATOR = "|";
+
+        /** 문제 출제: QUESTION|초성 */
+        public static final String QUESTION = "QUESTION";
+
+        /** 힌트 공개: HINT|뜻 */
+        public static final String HINT = "HINT";
+
+        /** 답 제출(클라이언트→서버): ANSWER|단어, 판정 결과(서버→전원): ANSWER|닉네임|단어|O 또는 X (O는 Round.Result.FIRST만, WRONG·ALREADY_SOLVED는 X) */
+        public static final String ANSWER = "ANSWER";
+
+        /** 정답 표시 */
+        public static final String CORRECT = "O";
+
+        /** 오답 표시 */
+        public static final String WRONG = "X";
+
+        private Protocol() {
         }
     }
 }
