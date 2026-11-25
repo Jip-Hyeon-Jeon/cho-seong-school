@@ -107,7 +107,7 @@ public class GameRoomView extends JPanel {
     public void setAvatar(String nickname, Avatar avatar) {
         Seat seat = seats.get(nickname);
         if (seat != null) {
-            seat.avatarLabel.setIcon(Theme.icon(avatar.imageName()));
+            seat.avatarLabel.setIcon(Theme.portraitIcon(avatar.ordinal(), Theme.PORTRAIT_SIZE));
         }
     }
 
@@ -376,7 +376,7 @@ public class GameRoomView extends JPanel {
             bubble.setMaximumSize(new Dimension(176, 34));
             setBubble("", null);
 
-            avatarLabel = new JLabel(Theme.icon(avatar.imageName()));
+            avatarLabel = new JLabel(Theme.portraitIcon(avatar.ordinal(), Theme.PORTRAIT_SIZE));
             setLift(0);
 
             RoundBox nameplate = new RoundBox(Theme.BROWN_LIGHT, Theme.BROWN, 2, 8);

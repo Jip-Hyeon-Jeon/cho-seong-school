@@ -147,9 +147,8 @@ public class LoginView extends JPanel {
         sectionTitle.setForeground(Theme.TEXT);
         panel.add(sectionTitle, BorderLayout.NORTH);
 
-        // 캐릭터 이미지 자리 (이미지 파일 넣기 전 임시 플레이스홀더)
-        charImageLabel = new JLabel("캐릭터 초상화", SwingConstants.CENTER);
-        charImageLabel.setFont(Theme.batangBold(16));
+        // 캐릭터 초상 (처음에는 0번)
+        charImageLabel = new JLabel(Theme.portraitIcon(0, Theme.PORTRAIT_SIZE_LARGE), SwingConstants.CENTER);
         charImageLabel.setOpaque(true);
         charImageLabel.setBackground(Theme.PAPER);
         charImageLabel.setBorder(new LineBorder(Theme.PAPER_BORDER, 2));
@@ -239,6 +238,7 @@ public class LoginView extends JPanel {
 
     public void updateCharacterDisplay(String name, int currentIndex, int totalCount) {
         charNameLabel.setText(name);
+        charImageLabel.setIcon(Theme.portraitIcon(currentIndex, Theme.PORTRAIT_SIZE_LARGE));
         charIndexLabel.setText((currentIndex + 1) + " / " + totalCount);
     }
 

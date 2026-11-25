@@ -154,7 +154,7 @@ public class ResultView extends JPanel {
 
 		//초상: 한 명이면 크게, 공동 우승이면 작게 나란히
 		int count = winners.size();
-		int size = (count == 1) ? 150 : Math.min(120, 390 / count - 8);
+		int size = (count == 1) ? Theme.PORTRAIT_SIZE_LARGE : Math.min(120, 390 / count - 8);
 		int step = size + 8;
 		int startX = 258 - (step * count - 8) / 2;
 		int y = 476 - size;

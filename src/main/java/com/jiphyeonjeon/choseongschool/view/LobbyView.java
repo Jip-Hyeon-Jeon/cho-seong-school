@@ -350,6 +350,7 @@ public class LobbyView extends JPanel {
         super.paintComponent(graphics);
         Graphics2D g = (Graphics2D) graphics.create();
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
         // 시안을 참고해 Java2D로 재현한 기와와 단청
         g.setColor(Theme.ROOF); g.fillRect(0, 0, Theme.SCREEN_WIDTH, 65);
         for (int x = 0; x < Theme.SCREEN_WIDTH; x += 28) {
