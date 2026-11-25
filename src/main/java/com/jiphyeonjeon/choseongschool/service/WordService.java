@@ -1,5 +1,7 @@
 package com.jiphyeonjeon.choseongschool.service;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -18,41 +20,11 @@ public class WordService {
 		this.wordRepository = wordRepository;
 	}
 	
-	//CREATE: 새로운 단어 생성 및 저장
-	public Word create(Word word) {
-		return wordRepository.save(word);  //JPA의 save() 메서드를 통해 DB에 저장
+	//READ: 난이도에 맞는 단어를 섞어서 count개 조회.
+	public List<Word> readByLevel(String level, int count) {
+		List<Word> words = new ArrayList<>(wordRepository.findByLevel(level));	//해당 난이도 해당하는 전체 단어 목록 가져옴
+		Collections.shuffle(words);		//단어 목록을 섞음
+		return words.subList(0, Math.min(count, words.size()));		//전체 단어 목록에서 총 문제 수만큼만 뽑아서 전달. 만약 count개가 전체 단어 목록 수보다 많을 경우 전체 단어 목록 리턴
 	}
-	
-	//READ: 모든 단어 목록 조회
-	public List<Word> read(){
-		return wordRepository.findAll();
-	}
-	
-	//READ: ID로 단어 조회 (없으면 null 리턴)
-	public Word readById(String id) {
-		return wordRepository.findById(id).orElse(null); //Optional에서 값이 없으면 null 리턴
-	}
-	
-	//UPDATE: ID로 단어 조회 후 예문, 난이도, 뜻 수정
-	public Word update(String id, Word updatedWord) {
-		Word word = readById(id); //기존 단어 조회
-		if (word == null) {
-			return null; //단어가 없으면 null 리턴
-		}
-		
-		//단어 정보 업데이트
-		word.setExample(updatedWord.getExample());
-		word.setLevel(updatedWord.getLevel());
-		word.setMeaning(updatedWord.getMeaning());
-		return wordRepository.save(word); //수정된 단어 저장 및 리턴
-	}
-	
-	//DELETE: ID로 단어 삭제(성공 여부를 Boolean으로 리턴)
-	public Boolean delete(String id) {
-		if(!wordRepository.existsById(id)) {
-			return false; //단어가 없으면 false 리턴
-		}
-		wordRepository.deleteById(id); //단어 삭제
-		return true; //삭제 성공시 true 리턴
-	}
+
 }
