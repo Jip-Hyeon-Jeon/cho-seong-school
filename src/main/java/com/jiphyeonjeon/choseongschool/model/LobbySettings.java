@@ -1,4 +1,4 @@
-package com.jiphyeonjeon.choseongschool.lobby.model;
+package com.jiphyeonjeon.choseongschool.model;
 
 /** 화면과 서버가 공유하는 변경 불가능한 학칙 값 */
 public record LobbySettings(Difficulty difficulty, int rounds, int seconds) {

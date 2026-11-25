@@ -12,8 +12,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import com.jiphyeonjeon.choseongschool.lobby.model.Difficulty;
-import com.jiphyeonjeon.choseongschool.lobby.server.LobbyServer;
+import com.jiphyeonjeon.choseongschool.model.Difficulty;
+import com.jiphyeonjeon.choseongschool.server.LobbyServer;
 import com.jiphyeonjeon.choseongschool.service.WordService;
 
 /**

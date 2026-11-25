@@ -1,6 +1,6 @@
 package com.jiphyeonjeon.choseongschool.client;
 
-import com.jiphyeonjeon.choseongschool.lobby.model.LobbyConstants;
+import com.jiphyeonjeon.choseongschool.common.LobbyConstants;
 import javax.swing.SwingUtilities;
 
 /** 클라이언트 실행 시작점: 창과 화면 흐름을 만들어 연결하고 로그인 화면을 띄운다 */

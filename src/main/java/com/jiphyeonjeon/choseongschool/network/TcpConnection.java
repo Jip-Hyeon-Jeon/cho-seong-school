@@ -1,6 +1,6 @@
-package com.jiphyeonjeon.choseongschool.lobby.network;
+package com.jiphyeonjeon.choseongschool.network;
 
-import com.jiphyeonjeon.choseongschool.lobby.model.LobbyConstants;
+import com.jiphyeonjeon.choseongschool.common.LobbyConstants;
 
 import java.io.*;
 import java.net.*;

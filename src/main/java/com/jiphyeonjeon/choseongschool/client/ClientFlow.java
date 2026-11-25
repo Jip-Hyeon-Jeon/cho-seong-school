@@ -2,13 +2,11 @@ package com.jiphyeonjeon.choseongschool.client;
 
 import com.jiphyeonjeon.choseongschool.controller.GameRoomController;
 import com.jiphyeonjeon.choseongschool.controller.LoginController;
-import com.jiphyeonjeon.choseongschool.lobby.client.GameScreenListener;
-import com.jiphyeonjeon.choseongschool.lobby.client.LobbyClient;
-import com.jiphyeonjeon.choseongschool.lobby.model.GameSession;
-import com.jiphyeonjeon.choseongschool.lobby.model.LobbySettings;
-import com.jiphyeonjeon.choseongschool.lobby.model.ParticipantInfo;
-import com.jiphyeonjeon.choseongschool.lobby.view.LobbyContainer;
-import com.jiphyeonjeon.choseongschool.lobby.view.LobbyView;
+import com.jiphyeonjeon.choseongschool.model.GameSession;
+import com.jiphyeonjeon.choseongschool.model.LobbySettings;
+import com.jiphyeonjeon.choseongschool.model.ParticipantInfo;
+import com.jiphyeonjeon.choseongschool.view.LobbyContainer;
+import com.jiphyeonjeon.choseongschool.view.LobbyView;
 import com.jiphyeonjeon.choseongschool.view.Avatar;
 import com.jiphyeonjeon.choseongschool.view.GameRoomView;
 import com.jiphyeonjeon.choseongschool.view.LoginView;

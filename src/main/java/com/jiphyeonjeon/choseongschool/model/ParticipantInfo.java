@@ -1,4 +1,6 @@
-package com.jiphyeonjeon.choseongschool.lobby.model;
+package com.jiphyeonjeon.choseongschool.model;
+
+import com.jiphyeonjeon.choseongschool.common.LobbyConstants;
 
 /** 소켓을 포함하지 않는 참가자 표시 정보 */
 public record ParticipantInfo(String id, String nickname, int character) {

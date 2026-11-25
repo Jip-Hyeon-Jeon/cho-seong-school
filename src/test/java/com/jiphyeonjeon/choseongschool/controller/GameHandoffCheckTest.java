@@ -1,15 +1,14 @@
-package com.jiphyeonjeon.choseongschool.lobby;
-import com.jiphyeonjeon.choseongschool.lobby.model.*;
-import com.jiphyeonjeon.choseongschool.lobby.view.*;
-import com.jiphyeonjeon.choseongschool.lobby.client.*;
-import com.jiphyeonjeon.choseongschool.lobby.network.*;
-import com.jiphyeonjeon.choseongschool.lobby.server.*;
+package com.jiphyeonjeon.choseongschool.controller;
+import com.jiphyeonjeon.choseongschool.model.*;
+import com.jiphyeonjeon.choseongschool.view.*;
+import com.jiphyeonjeon.choseongschool.client.*;
+import com.jiphyeonjeon.choseongschool.network.*;
+import com.jiphyeonjeon.choseongschool.server.*;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.swing.SwingUtilities;
-
 
 /** 소켓 수신 콜백과 같은 방식으로 연속 메시지를 전달하여 전환 순서를 검증합니다. */
 final class GameHandoffCheckTest {
