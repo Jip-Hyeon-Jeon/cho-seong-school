@@ -11,6 +11,7 @@ import com.jiphyeonjeon.choseongschool.lobby.view.LobbyContainer;
 import com.jiphyeonjeon.choseongschool.lobby.view.LobbyView;
 import com.jiphyeonjeon.choseongschool.view.GameRoomView;
 import com.jiphyeonjeon.choseongschool.view.LoginView;
+import com.jiphyeonjeon.choseongschool.view.ResultView;
 import java.net.InetAddress;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -18,6 +19,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
+import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.SwingUtilities;
 import org.junit.jupiter.api.Test;
@@ -78,6 +80,62 @@ class ClientFlowTest {
 
             SwingUtilities.invokeAndWait(() -> flow.get().close());
         }
+    }
+
+    /** 시작하면 바로 게임을 끝내는 서버 쪽 게임 로직 */
+    private static final class InstantGame implements GameEvents {
+        @Override
+        public void onStart(List<ParticipantInfo> players, LobbySettings settings, Consumer<String> broadcast) {
+            broadcast.accept("QUESTION|ㅊㅅ");
+            broadcast.accept("GAME_END|지수|10");
+        }
+
+        @Override
+        public void onAnswer(ParticipantInfo player, String answer, Consumer<String> broadcast) {
+        }
+    }
+
+    @Test
+    void gameEndShowsResultAndWaitingRoomButtonReturnsToLobby() throws Exception {
+        try (LobbyServer server = new LobbyServer(InetAddress.getLoopbackAddress(), 0, new InstantGame())) {
+            RecordingHost host = new RecordingHost();
+            AtomicReference<ClientFlow> flow = new AtomicReference<>();
+            SwingUtilities.invokeAndWait(() -> {
+                flow.set(new ClientFlow(host, server.getPort()));
+                flow.get().enterLobby("127.0.0.1", "지수", 3);
+            });
+            LobbyContainer lobbyScreen = (LobbyContainer) host.last();
+            LobbyView lobby = (LobbyView) lobbyScreen.getComponent(0);
+            waitOnEdt(() -> lobby.getStartButton().isEnabled());
+            SwingUtilities.invokeAndWait(() -> lobby.getStartButton().doClick());
+
+            // 게임 화면을 거쳐 GAME_END를 받으면 결과 화면으로 바뀐다
+            waitOnEdt(() -> host.last() instanceof ResultView);
+            assertTrue(host.shown.stream().anyMatch(GameRoomView.class::isInstance));
+            ResultView result = (ResultView) host.last();
+
+            // "서당 마루로" → 같은 연결의 대기실로 돌아가고, 반장은 다시 시작할 수 있다
+            SwingUtilities.invokeAndWait(() -> button(result, "서당 마루로").doClick());
+            assertTrue(host.last() == lobbyScreen);
+            waitOnEdt(() -> lobby.getStartButton().isEnabled());
+            int before = host.shown.size();
+            SwingUtilities.invokeAndWait(() -> lobby.getStartButton().doClick());
+            waitOnEdt(() -> host.shown.size() > before && host.last() instanceof ResultView);
+
+            // 결과 화면 "나가기" → 로그인 화면
+            ResultView second = (ResultView) host.last();
+            SwingUtilities.invokeAndWait(() -> button(second, "나가기").doClick());
+            assertInstanceOf(LoginView.class, host.last());
+        }
+    }
+
+    private static JButton button(java.awt.Container container, String text) {
+        for (java.awt.Component c : container.getComponents()) {
+            if (c instanceof JButton b && text.equals(b.getText())) {
+                return b;
+            }
+        }
+        throw new AssertionError("버튼 없음: " + text);
     }
 
     @Test
