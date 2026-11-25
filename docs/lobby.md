@@ -9,12 +9,17 @@ Java 21, 프로젝트 루트에서 실행한다.
 
 ```powershell
 .\gradlew.bat clean build
-.\gradlew.bat runLobbyServer --args="50024 127.0.0.1"
+.\gradlew.bat runServer
 .\gradlew.bat runClient
 ```
 
+`runServer`는 Spring 앱 하나로 DB와 대기실 TCP 서버를 함께 실행한다(`config.LobbyServerConfiguration`).
+DB 계정은 프로젝트 루트의 `application-secret.properties`(gitignore)나 환경 변수 `DB_USERNAME`, `DB_PASSWORD`로 넣는다.
+대기실 주소와 포트는 `application.properties`의 `lobby.bind-address`(기본 `0.0.0.0`, 같은 Wi-Fi의 다른 PC도 접속), `lobby.port`(기본 50024)로 바꾼다.
+Ctrl+C로 종료하면 Spring이 `LobbyServer.close()`로 소켓과 스레드를 정리한다.
+
+DB 없이 대기실만 확인할 때는 `.\gradlew.bat runLobbyServer --args="50024 127.0.0.1"`을 쓰고 Enter로 종료한다. 이때는 게임 로직이 연결되지 않는다.
 클라이언트(`client.ClientMain`)는 창 하나에서 로그인 → 대기실 → 게임 화면을 차례로 보여 준다.
-서버는 Enter로 종료한다. 다른 PC를 받을 때는 서버 bind 주소를 `0.0.0.0`으로 지정한다.
 테스트는 루프백 소켓으로 정원·반장 권한과 위임·설정 검증·카운트다운 취소/재시작·게임 메시지 전달을 확인한다.
 별도 PR 소스나 미리보기 실행기는 필요하지 않다. 실제 MariaDB와 여러 PC/LAN 환경은 별도 검증 대상이다.
 
@@ -49,9 +54,10 @@ PR #2의 컨트롤러에는 `new GameRoomController(gameView, client::send)`로 
 `gameView.setPlayers(...)`에는 참가자의 닉네임 목록을 전달한다. 소켓·수신 스레드를 새로 만들지 않는다.
 
 서버는 `LobbyServer(bindAddress, port, GameEvents)`로 게임 로직을 연결한다.
+`GameEvents` 구현체를 `@Component`로 등록하면 `runServer` 실행 시 Spring이 자동으로 주입한다. `WordService` 같은 DB Bean도 생성자로 받을 수 있다.
 `onStart`에서 출제·문제 타이머를 시작하고 `onAnswer`에서 정답을 판정한 뒤 `broadcast`로 전송한다.
 DB 조회로 방 이벤트 스레드를 막지 않는다. `onLeave`, `onRoomEmpty`와 서버 종료 시 타이머·자원을 정리한다.
-기본 서버 실행기는 게임 로직이 없어 카운트다운까지만 제공한다.
+`GameEvents` Bean이 없거나 `runLobbyServer`로 실행하면 게임 로직이 없어 카운트다운까지만 제공한다.
 
 ## 대기실 메시지 제안
 
