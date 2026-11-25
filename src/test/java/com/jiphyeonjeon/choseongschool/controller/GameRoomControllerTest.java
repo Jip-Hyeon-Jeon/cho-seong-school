@@ -28,11 +28,36 @@ class GameRoomControllerTest {
         public void showBubble(String nickname, String word, boolean correct) {
             calls.add("A:" + nickname + "," + word + "," + correct);
         }
+
+        @Override
+        public void setTimeLeft(int seconds, int totalSeconds) {
+            calls.add("T:" + seconds + "/" + totalSeconds);
+        }
+
+        @Override
+        public void setScore(String nickname, int score) {
+            calls.add("S:" + nickname + "," + score);
+        }
+
+        @Override
+        public void setRound(int round, int totalRounds) {
+            calls.add("R:" + round + "/" + totalRounds);
+        }
+
+        @Override
+        public void showRoundEnd(String answer, String meaning) {
+            calls.add("E:" + answer + "," + meaning);
+        }
     }
 
     private final RecordingView view = new RecordingView();
     private final List<String> sent = new ArrayList<>();
     private final GameRoomController controller = new GameRoomController(view, sent::add);
+    private final List<List<GameRoomController.FinalScore>> ended = new ArrayList<>();
+
+    {
+        controller.setGameEndListener(ended::add);
+    }
 
     /** handle()은 invokeLater로 넘기므로 Swing 스레드가 다 처리할 때까지 기다린다 */
     private void handleAll(String... lines) throws Exception {
@@ -52,6 +77,54 @@ class GameRoomControllerTest {
     void 칸이_모자란_메시지는_버린다() throws Exception {
         handleAll("QUESTION", "HINT", "ANSWER|유나", "ANSWER|유나|사필귀정", "");
         assertEquals(List.of(), view.calls);
+    }
+
+    @Test
+    void 게임_진행_메시지를_화면에_그린다() throws Exception {
+        handleAll("ROUND|3|10", "TIME|30|30", "TIME|7|30", "SCORE|유나|120", "ROUND_END|사필귀정|모든 일은 반드시 바른 길로 돌아감");
+        assertEquals(List.of("R:3/10", "T:30/30", "T:7/30", "S:유나,120", "E:사필귀정,모든 일은 반드시 바른 길로 돌아감"),
+                view.calls);
+    }
+
+    @Test
+    void 숫자_칸이_잘못되거나_모자란_진행_메시지는_버린다() throws Exception {
+        handleAll("TIME|칠|30", "TIME|7", "SCORE|유나", "SCORE|유나|많이", "ROUND|3", "ROUND_END|사필귀정",
+                "GAME_END", "GAME_END|유나", "GAME_END|유나|10|지수", "GAME_END|유나|열");
+        assertEquals(List.of(), view.calls);
+        assertEquals(List.of(), ended);
+    }
+
+    @Test
+    void 게임_종료면_최종_점수를_넘긴다() throws Exception {
+        handleAll("GAME_END|유나|300|지수|300|서영|120");
+        assertEquals(List.of(List.of(
+                new GameRoomController.FinalScore("유나", 300),
+                new GameRoomController.FinalScore("지수", 300),
+                new GameRoomController.FinalScore("서영", 120))), ended);
+    }
+
+    @Test
+    void 라운드_안내_문구는_처음_정한_것을_유지한다() {
+        GameRoomView real = new GameRoomView();
+        real.setRound(1, 10, "난이도 하");
+        real.setRound(4, 10);
+        assertEquals("10강 중 · 난이도 하", roundInfoText(real));
+    }
+
+    /** 팻말 둘째 줄 라벨 글자 (화면 구조를 직접 뒤지지 않도록 텍스트로만 찾는다) */
+    private static String roundInfoText(java.awt.Container root) {
+        for (java.awt.Component c : root.getComponents()) {
+            if (c instanceof javax.swing.JLabel label && label.getText() != null && label.getText().contains("강 중")) {
+                return label.getText();
+            }
+            if (c instanceof java.awt.Container child) {
+                String found = roundInfoText(child);
+                if (found != null) {
+                    return found;
+                }
+            }
+        }
+        return null;
     }
 
     @Test

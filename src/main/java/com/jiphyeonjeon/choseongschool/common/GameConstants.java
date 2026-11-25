@@ -62,6 +62,21 @@ public final class GameConstants {
         /** 오답 표시 */
         public static final String WRONG = "X";
 
+        /** 남은 시간(서버→전원, 1초마다): TIME|남은초|전체초 */
+        public static final String TIME = "TIME";
+
+        /** 점수 갱신(서버→전원): SCORE|닉네임|점수 */
+        public static final String SCORE = "SCORE";
+
+        /** 새 라운드 시작(서버→전원, QUESTION보다 먼저): ROUND|현재라운드|전체라운드 */
+        public static final String ROUND = "ROUND";
+
+        /** 라운드 종료·정답 공개(서버→전원): ROUND_END|정답|뜻 */
+        public static final String ROUND_END = "ROUND_END";
+
+        /** 게임 종료·최종 점수(서버→전원): GAME_END|닉네임|점수|닉네임|점수|... */
+        public static final String GAME_END = "GAME_END";
+
         private Protocol() {
         }
     }

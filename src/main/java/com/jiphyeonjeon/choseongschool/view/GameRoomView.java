@@ -54,6 +54,8 @@ public class GameRoomView extends JPanel {
     private final JPanel seatRow = new JPanel(new FlowLayout(FlowLayout.CENTER, 34, 0));
     /** 닉네임 → 학동 자리 */
     private final Map<String, Seat> seats = new LinkedHashMap<>();
+    /** 팻말 둘째 줄의 안내 문구 (예: "난이도 하") */
+    private String roundInfo = "";
 
     public GameRoomView() {
         setLayout(new BorderLayout());
@@ -122,8 +124,19 @@ public class GameRoomView extends JPanel {
 
     /** 팻말: "제 3 강" / "10강 중 · 문장 · 난이도 중" */
     public void setRound(int round, int totalRounds, String info) {
+        roundInfo = info;
         roundLabel.setText("제 " + round + " 강");
         roundInfoLabel.setText(totalRounds + "강 중 · " + info);
+    }
+
+    /** 라운드만 바꾸고, 난이도 같은 안내 문구는 처음 setRound로 정한 것을 그대로 쓴다 */
+    public void setRound(int round, int totalRounds) {
+        setRound(round, totalRounds, roundInfo);
+    }
+
+    /** 라운드 종료: 귀띔 자리에 정답과 뜻을 보여준다 (정답 공개·점프 연출은 #16에서 다듬는다) */
+    public void showRoundEnd(String answer, String meaning) {
+        showHint(meaning.isEmpty() ? "정답: " + answer : "정답: " + answer + " · " + meaning);
     }
 
     /** 새 문제 (초성이 섞인 문장). 힌트와 말풍선은 비운다 */
