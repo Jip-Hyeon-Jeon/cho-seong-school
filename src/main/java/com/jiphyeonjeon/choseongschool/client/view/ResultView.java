@@ -33,7 +33,7 @@ import javax.swing.SwingUtilities;
 import com.jiphyeonjeon.choseongschool.client.controller.ResultController;
 import com.jiphyeonjeon.choseongschool.client.model.Player;
 
-/** 최종 결과 화면: 왼쪽 장원(우승자), 오른쪽 방(최종 순위) */
+/** 최종 결과 화면: 왼쪽 장원(우승자), 오른쪽 합격자 명단(최종 순위) */
 public class ResultView extends JPanel {
 
 	private static final long serialVersionUID = 1L;
@@ -177,7 +177,7 @@ public class ResultView extends JPanel {
 		drawLeft(g2, score, BATANG_BOLD, 22, Theme.TEXT_SCORE, boxX + 40, 590, 200);
 	}
 
-	//오른쪽: 방(순위표)
+	//오른쪽: 합격자 명단(순위표)
 	private void paintRanking(Graphics2D g2) {
 		g2.setColor(Theme.PAPER);
 		g2.fillRect(504, 204, 632, 430);
@@ -189,13 +189,9 @@ public class ResultView extends JPanel {
 			paintRod(g2, x, 194, 450);
 		}
 
-		//고운바탕에 없는 한자라서 윈도우 바탕체 사용
-		Font hanja = Theme.hanjaFont(22);
 		int x = 530;
-		drawLeft(g2, "방", BATANG_BOLD, 46, Theme.TEXT, x, 249, 60);
-		x += textWidth(g2, "방", BATANG_BOLD, 46, 60) + 10;
-		drawLeft(g2, "(榜)", hanja, 22, Theme.TEXT_SUB, x, 253, 60);
-		x += textWidth(g2, "(榜)", hanja, 22, 60) + 10;
+		drawLeft(g2, "합격자 명단", BATANG_BOLD, 40, Theme.TEXT, x, 249, 300);
+		x += textWidth(g2, "합격자 명단", BATANG_BOLD, 40, 300) + 14;
 		drawLeft(g2, "최종 순위 · 동점은 같은 등수", BATANG, 14, Theme.TEXT_SUB, x, 258, 250);
 
 		g2.setColor(Theme.RED);

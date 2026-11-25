@@ -84,14 +84,6 @@ public final class Theme {
     public static final Color GRAY = new Color(0x8A8178);
 
     // ---- 색: 건물, 소품 ----
-    /** 지붕 바탕 */
-    public static final Color ROOF = new Color(0x31333C);
-    /** 기왓골 */
-    public static final Color ROOF_TILE = new Color(0x4E4F57);
-    /** 기와 끝 */
-    public static final Color ROOF_TILE_LIGHT = new Color(0x8E8E92);
-    /** 기와 끝 안쪽 */
-    public static final Color ROOF_TILE_DARK = new Color(0x2F3035);
     /** 기둥 */
     public static final Color PILLAR = new Color(0xA63A2B);
     /** 주춧돌 */
@@ -126,15 +118,8 @@ public final class Theme {
     public static final Color SHADOW_DARK = new Color(78, 52, 46, 75);
 
     // ---- 폰트 (resources/fonts, SIL OFL) ----
-    private static final Font BRUSH = load("NanumBrushScript-Regular.ttf");
     private static final Font BATANG = load("GowunBatang-Regular.ttf");
     private static final Font BATANG_BOLD = load("GowunBatang-Bold.ttf");
-    private static final Font HAHMLET_BLACK = load("Hahmlet-Black.ttf");
-
-    /** 나눔손글씨 붓: "제 N 강" 전용 (폰트 파일에 숫자, 제, 강만 들어 있음) */
-    public static Font roundFont(float size) {
-        return BRUSH.deriveFont(size);
-    }
 
     /** 고운바탕: 기본 글꼴 */
     public static Font batang(float size) {
@@ -146,19 +131,9 @@ public final class Theme {
         return BATANG_BOLD.deriveFont(size);
     }
 
-    /** 함렛 Black: 문제 문장, 남은 초 */
-    public static Font questionFont(float size) {
-        return HAHMLET_BLACK.deriveFont(size);
-    }
-
-    /** 입력창 글자: 시스템 고딕 (시안은 Noto Sans KR) */
-    public static Font inputFont(float size) {
+    /** 화살표 기호: 시스템 글꼴 (고운바탕에 ◀, ▶가 없음) */
+    public static Font symbolFont(float size) {
         return new Font(Font.SANS_SERIF, Font.PLAIN, Math.round(size));
-    }
-
-    /** 한자: 윈도우 바탕체 (고운바탕에 "榜"이 없음) */
-    public static Font hanjaFont(float size) {
-        return new Font("바탕", Font.BOLD, Math.round(size));
     }
 
     /** 캐릭터 번호(0 세종, 1 퇴계, 2 율곡, 3 사임당, 4 이순신)의 초상 경로 */

@@ -23,7 +23,7 @@ public class LobbyView extends JPanel {
     private static final int PLAYER_GROUP_TOP = 393;
     private final JButton start = button("과거 시작");
     private final JButton exit = button("나가기");
-    private final JLabel status = label("서버에 입장하는 중입니다.", 21);
+    private final JLabel status = boldLabel("서버에 입장하는 중입니다.", 24);
     private final ButtonGroup levels = new ButtonGroup();
     private final ButtonGroup rounds = new ButtonGroup();
     private final ButtonGroup seconds = new ButtonGroup();
@@ -35,10 +35,10 @@ public class LobbyView extends JPanel {
     private Runnable startRequest;
     private final CountdownOverlay networkCountdown = new CountdownOverlay();
     private java.util.function.Consumer<LobbySettings> settingsRequest;
-    private final JLabel count = label("학동 0 / 5명", 18);
+    private final JLabel count = boldLabel("학동 0 / 5명", 20);
     private final java.util.List<JLabel> participantLabels = new java.util.ArrayList<>();
     private final java.util.List<JLabel> roleBadges = new java.util.ArrayList<>();
-    private final JLabel guide = label("", 13);
+    private final JLabel guide = label("", 16);
 
     public LobbyView() {
         UIManager.put("ToggleButton.select", Theme.RED);
@@ -55,15 +55,15 @@ public class LobbyView extends JPanel {
                 throw new IllegalStateException("캐릭터 리소스를 읽지 못했습니다.", e);
             }
         }
-        JLabel title = label("서당 마루", 28);
+        JLabel title = boldLabel("서당 마루", 34);
         title.setForeground(Theme.TEXT_LIGHT);
-        place(title, 50, 100, 165, 55);
-        place(count, 230, 110, 140, 35);
-        place(exit, 1040, 108, 108, 42);
-        JLabel rules = label("<html>학<br>칙</html>", 23);
+        place(title, 48, 102, 170, 56);
+        place(count, 232, 112, 150, 36);
+        place(exit, 1042, 108, 110, 44);
+        JLabel rules = boldLabel("<html>학<br>칙</html>", 24);
         rules.setForeground(Theme.TEXT_LIGHT);
         place(rules, 50, 185, 42, 90);
-        JLabel help = label("서당 학칙은 반장만 바꿀 수 있습니다", 17);
+        JLabel help = boldLabel("서당 학칙은 반장만 바꿀 수 있습니다", 18);
         help.setHorizontalAlignment(SwingConstants.LEFT);
         place(help, 110, 180, 600, 28);
         addOptions("난이도", levels, new String[]{"하", "중", "상"}, new String[]{"LOW", "MEDIUM", "HIGH"}, 0, 110);
@@ -72,7 +72,7 @@ public class LobbyView extends JPanel {
         place(status, 100, 310, 1000, 40);
         start.setBackground(Theme.RED);
         start.setForeground(Theme.TEXT_LIGHT);
-        start.setFont(Theme.batangBold(23));
+        start.setFont(Theme.batangBold(24));
         place(start, 485, 615, 230, 54);
         place(guide, 250, 677, 700, 25);
         {
@@ -101,7 +101,8 @@ public class LobbyView extends JPanel {
         int nameWidth = participants.size() >= 4 ? 110 : 130;
         for (int i = 0; i < participants.size(); i++) {
             int centerX = playerCenterX(i);
-            JLabel name = label(participants.get(i).nickname(), 18);
+            JLabel name = new CenteredLabel(Theme.batangBold(18), Theme.TEXT);
+            name.setText(participants.get(i).nickname());
             name.putClientProperty("html.disable", Boolean.TRUE);
             name.setOpaque(true);
             name.setBackground(Theme.BROWN_LIGHT);
@@ -109,12 +110,11 @@ public class LobbyView extends JPanel {
             place(name, centerX - nameWidth / 2, PLAYER_GROUP_TOP + 141, nameWidth, 38);
             participantLabels.add(name);
             // 반장 여부와 본인 여부를 독립적으로 구분
-            JLabel roleBadge = label("", 14);
+            JLabel roleBadge = new CenteredLabel(Theme.batangBold(15), Theme.TEXT_LIGHT);
             roleBadges.add(roleBadge);
             participantLabels.add(roleBadge);
             roleBadge.setOpaque(true);
             roleBadge.setBackground(i == 0 ? Theme.RED : Theme.BROWN_DARK);
-            roleBadge.setForeground(Theme.TEXT_LIGHT);
             roleBadge.setBorder(new LineBorder(Theme.PAPER_BORDER));
             place(roleBadge, centerX - 34, PLAYER_GROUP_TOP, 68, 26);
         }
@@ -124,13 +124,13 @@ public class LobbyView extends JPanel {
     }
 
     private void addOptions(String title, ButtonGroup group, String[] labels, String[] values, int selected, int x) {
-        JLabel heading = label(title, 14);
+        JLabel heading = label(title, 16);
         heading.setHorizontalAlignment(SwingConstants.LEFT);
-        place(heading, x, 215, 150, 25);
+        place(heading, x, 213, 150, 26);
         for (int i = 0; i < labels.length; i++) {
             JToggleButton option = new JToggleButton(labels[i]);
             option.setUI(new javax.swing.plaf.basic.BasicToggleButtonUI());
-            option.setFont(Theme.batang(16));
+            option.setFont(Theme.batangBold(17));
             option.setActionCommand(values[i]);
             option.setFocusPainted(false);
             option.setMargin(new Insets(0, 0, 0, 0));
@@ -161,9 +161,44 @@ public class LobbyView extends JPanel {
         return label;
     }
 
+    private static JLabel boldLabel(String text, int size) {
+        JLabel label = label(text, size);
+        label.setFont(Theme.batangBold(size));
+        return label;
+    }
+
+    /** 글자의 실제 모양을 기준으로 가운데에 그리는 이름표, 배지 (글꼴 위쪽 여백 때문에 글자가 아래로 처지지 않게) */
+    private static class CenteredLabel extends JLabel {
+        CenteredLabel(Font font, Color color) {
+            setFont(font);
+            setForeground(color);
+        }
+
+        @Override
+        protected void paintComponent(Graphics graphics) {
+            Graphics2D g = (Graphics2D) graphics.create();
+            HanokPainter.setQuality(g);
+            g.setColor(getBackground());
+            g.fillRect(0, 0, getWidth(), getHeight());
+            if (!getText().isEmpty()) {
+                Font font = getFont();
+                var bounds = font.createGlyphVector(g.getFontRenderContext(), getText()).getVisualBounds();
+                if (bounds.getWidth() > getWidth() - 12) { // 긴 닉네임은 칸에 맞게 줄인다
+                    font = font.deriveFont((float) (font.getSize2D() * (getWidth() - 12) / bounds.getWidth()));
+                    bounds = font.createGlyphVector(g.getFontRenderContext(), getText()).getVisualBounds();
+                }
+                g.setFont(font);
+                g.setColor(getForeground());
+                g.drawString(getText(), (float) ((getWidth() - bounds.getWidth()) / 2 - bounds.getX()),
+                        (float) ((getHeight() - bounds.getHeight()) / 2 - bounds.getY()));
+            }
+            g.dispose();
+        }
+    }
+
     private static JButton button(String text) {
         JButton button = new JButton(text);
-        button.setFont(Theme.batang(17));
+        button.setFont(Theme.batangBold(18));
         button.setBackground(Theme.PAPER);
         button.setForeground(Theme.TEXT);
         button.setFocusPainted(false);
@@ -265,26 +300,8 @@ public class LobbyView extends JPanel {
         Graphics2D g = (Graphics2D) graphics.create();
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
-        // 시안을 참고해 Java2D로 재현한 기와와 단청
-        g.setColor(Theme.ROOF); g.fillRect(0, 0, Theme.SCREEN_WIDTH, 65);
-        for (int x = 0; x < Theme.SCREEN_WIDTH; x += 28) {
-            g.setColor(Theme.ROOF_TILE); g.fillRect(x + 4, 12, 13, 44);
-            g.setColor(Theme.ROOF_TILE_LIGHT); g.fillOval(x + 2, 48, 18, 16);
-            g.setColor(Theme.ROOF_TILE_DARK); g.fillOval(x + 7, 53, 8, 7);
-        }
-        g.setColor(Theme.GREEN); g.fillRect(0, 65, Theme.SCREEN_WIDTH, 29);
-        g.setColor(Theme.GOLD); g.fillRect(0, 65, Theme.SCREEN_WIDTH, 3); g.fillRect(0, 89, Theme.SCREEN_WIDTH, 3);
-        for (int x = 15; x < Theme.SCREEN_WIDTH; x += 60) {
-            g.setColor(Theme.RED); g.fillOval(x, 73, 10, 10);
-            g.setColor(Theme.PAPER); g.drawOval(x, 73, 10, 10);
-            g.setColor(Theme.GOLD);
-            g.fillPolygon(new int[]{x+28,x+34,x+28,x+22}, new int[]{72,78,84,78},4);
-        }
-        g.setColor(Theme.PILLAR); g.fillRect(0, 94, 19, 626); g.fillRect(1181, 94, 19, 626);
-        g.setColor(Theme.FLOOR); g.fillRect(0, 719, Theme.SCREEN_WIDTH, 21);
-        g.setColor(Theme.FLOOR_LINE); for(int x=100;x<Theme.SCREEN_WIDTH;x+=150) g.drawLine(x,720,x,Theme.SCREEN_HEIGHT);
-        g.setColor(Theme.BROWN_DARK); g.fillRoundRect(50,100,165,55,4,4);
-        g.setColor(Theme.GOLD); g.setStroke(new BasicStroke(3)); g.drawRoundRect(50,100,165,55,4,4);
+        HanokPainter.paintHanok(g); // 기와, 단청, 기둥, 마루 (로그인, 결과와 같은 그림)
+        HanokPainter.drawBox(g, 48, 102, 170, 56, 6, 4, Theme.BROWN_DARK, Theme.GOLD);
         g.setColor(Theme.PAPER); g.fillRoundRect(50,170,1100,118,4,4);
         g.setColor(Theme.PAPER_BORDER); g.setStroke(new BasicStroke(1.5f)); g.drawRoundRect(50,170,1100,118,4,4);
         g.setColor(Theme.RED); g.fillRect(50,185,42,90);

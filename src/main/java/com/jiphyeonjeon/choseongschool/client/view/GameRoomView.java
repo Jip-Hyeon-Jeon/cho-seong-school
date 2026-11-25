@@ -42,11 +42,11 @@ public class GameRoomView extends JPanel {
     /** 귀띔 상자(약 1100px) 안에서 뜻이 한 줄에 쓸 수 있는 폭 */
     private static final int HINT_MAX_WIDTH = 1000;
 
-    private final JLabel roundLabel = label("제 1 강", Theme.roundFont(42), Theme.TEXT);
+    private final JLabel roundLabel = label("제 1 강", Theme.batangBold(32), Theme.TEXT);
     private final JLabel roundInfoLabel = label(" ", Theme.batang(12), Theme.BROWN_DARK);
-    private final JLabel questionLabel = label(" ", Theme.questionFont(QUESTION_FONT_SIZE), Theme.TEXT);
+    private final JLabel questionLabel = label(" ", Theme.batangBold(QUESTION_FONT_SIZE), Theme.TEXT);
     private final IncenseTimer incense = new IncenseTimer();
-    private final JLabel secondsLabel = label("", Theme.questionFont(40), Theme.RED);
+    private final JLabel secondsLabel = label("", Theme.batangBold(40), Theme.RED);
     private final RoundBox hintSeal = seal("훈장님 귀띔", 14, 4, 12, 5);
     private final JLabel meaningLabel = label(" ", Theme.batangBold(24), Theme.TEXT);
     private final JTextField inputField = new JTextField();
@@ -151,7 +151,7 @@ public class GameRoomView extends JPanel {
 
     /** 두루마리 글자. 높이가 고정이라 줄을 바꾸지 않고, 길면 한 줄에 들어가게 글씨를 줄인다 */
     private void setScrollText(String text, Color color) {
-        Font font = Theme.questionFont(QUESTION_FONT_SIZE);
+        Font font = Theme.batangBold(QUESTION_FONT_SIZE);
         int width = questionLabel.getFontMetrics(font).stringWidth(text);
         if (width > QUESTION_MAX_WIDTH) {
             font = font.deriveFont(QUESTION_FONT_SIZE * QUESTION_MAX_WIDTH / width);
@@ -263,6 +263,14 @@ public class GameRoomView extends JPanel {
         caption.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 0));
         caption.setAlignmentY(1f);
         secondsLabel.setAlignmentY(1f);
+        // 초가 한 자리로 줄어도 "남은 시간"이 움직이지 않도록 두 자리 크기로 고정
+        secondsLabel.setText("00초");
+        Dimension secondsSize = secondsLabel.getPreferredSize();
+        secondsLabel.setText("");
+        secondsLabel.setHorizontalAlignment(SwingConstants.RIGHT);
+        secondsLabel.setMinimumSize(secondsSize);
+        secondsLabel.setPreferredSize(secondsSize);
+        secondsLabel.setMaximumSize(secondsSize);
 
         JPanel seconds = transparent(null);
         seconds.setLayout(new BoxLayout(seconds, BoxLayout.X_AXIS));
@@ -294,7 +302,7 @@ public class GameRoomView extends JPanel {
 
     /** 붓 + 답안지 + 제출 */
     private JComponent inputRow() {
-        inputField.setFont(Theme.inputFont(19));
+        inputField.setFont(Theme.batang(19));
         inputField.setForeground(Theme.TEXT);
         inputField.setCaretColor(Theme.TEXT);
         inputField.setOpaque(false);

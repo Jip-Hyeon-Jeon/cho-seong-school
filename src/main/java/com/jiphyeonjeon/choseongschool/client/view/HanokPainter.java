@@ -16,7 +16,7 @@ import java.util.Map;
 import javax.imageio.ImageIO;
 
 
-/** 한국풍 화면(로그인, 결과)이 함께 쓰는 그리기 도구 */
+/** 한국풍 화면(로그인, 대기실, 결과)이 함께 쓰는 그리기 도구 */
 final class HanokPainter {
 
 	//한 번 읽은 이미지 보관 (그릴 때마다 파일을 다시 읽지 않도록)
