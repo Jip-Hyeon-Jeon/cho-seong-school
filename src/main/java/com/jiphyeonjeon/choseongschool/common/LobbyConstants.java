@@ -8,6 +8,5 @@ public final class LobbyConstants {
     public static final int DEFAULT_PORT = 50024;
     public static final int MAX_LINE_LENGTH = 4096;
     public static final int CONNECT_TIMEOUT_MS = 3000;
-    public static final int SEND_QUEUE_CAPACITY = 128;
     private LobbyConstants() { }
 }

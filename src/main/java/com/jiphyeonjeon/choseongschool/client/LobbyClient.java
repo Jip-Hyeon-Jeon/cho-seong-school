@@ -1,34 +1,23 @@
 package com.jiphyeonjeon.choseongschool.client;
 
 import com.jiphyeonjeon.choseongschool.client.controller.NetworkLobbyController;
-
-import com.jiphyeonjeon.choseongschool.common.network.LineMessages;
-import com.jiphyeonjeon.choseongschool.common.LobbyConstants;
-import com.jiphyeonjeon.choseongschool.client.view.LobbyView;
 import com.jiphyeonjeon.choseongschool.client.model.LobbyState;
-import com.jiphyeonjeon.choseongschool.common.model.ParticipantInfo;
 import com.jiphyeonjeon.choseongschool.client.network.TcpConnection;
+import com.jiphyeonjeon.choseongschool.client.view.LobbyView;
+import com.jiphyeonjeon.choseongschool.common.model.ParticipantInfo;
+import com.jiphyeonjeon.choseongschool.common.network.LineMessages;
 
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.RejectedExecutionException;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
 import javax.swing.SwingUtilities;
 
-/** 로그인 이후 연결 수명 관리 및 게임 화면과 공유하는 송신 기능 */
+/**
+ * 로그인 이후 연결 수명 관리 및 게임 화면과 공유하는 송신 기능.
+ * 10주차 채팅 클라이언트처럼 연결은 별도 Thread에서 만들고, 보내기는 TcpConnection.send(synchronized)로 직접 한다.
+ */
 public final class LobbyClient implements AutoCloseable {
     private final NetworkLobbyController controller;
-    private final AtomicReference<TcpConnection> connection = new AtomicReference<>();
-    private final AtomicBoolean closed = new AtomicBoolean();
-    private final AtomicBoolean started = new AtomicBoolean();
-    private final ThreadPoolExecutor sender = new ThreadPoolExecutor(1, 1, 0, TimeUnit.MILLISECONDS,
-            new ArrayBlockingQueue<>(LobbyConstants.SEND_QUEUE_CAPACITY), runnable -> {
-                Thread thread = new Thread(runnable, "lobby-sender");
-                thread.setDaemon(true);
-                return thread;
-            });
+    private TcpConnection connection;   // synchronized 메서드로만 읽고 쓴다
+    private boolean closed;
+    private boolean started;
 
     public LobbyClient(LobbyView view, GameScreenListener gameScreen) {
         if (!SwingUtilities.isEventDispatchThread()) throw new IllegalStateException("Swing 스레드에서 생성하세요.");
@@ -45,19 +34,18 @@ public final class LobbyClient implements AutoCloseable {
     public void connect(String host, int port, String nickname, int character) {
         if (host == null || host.isBlank() || port < 1 || port > 65535) throw new IllegalArgumentException("접속 주소를 확인하세요.");
         ParticipantInfo player = new ParticipantInfo("local", nickname == null ? null : nickname.trim(), character);
-        if (closed.get() || !started.compareAndSet(false, true)) throw new IllegalStateException("연결은 한 번만 시작합니다.");
+        markStarted();
         Thread connector = new Thread(() -> {
             try {
                 TcpConnection current = new TcpConnection(host, port);
-                connection.set(current);
-                if (closed.get()) { current.close(); return; }
+                if (!setConnection(current)) return; // 연결 중에 이미 닫혔으면 정리하고 끝
                 current.startReceiving(controller::handle, () -> {
                     controller.onClosed();
                     close();
                 });
                 current.send("JOIN|" + player.nickname() + "|" + player.character());
             } catch (Exception e) {
-                if (!closed.get()) controller.onConnectFailed();
+                if (!isClosed()) controller.onConnectFailed();
                 close();
             }
         }, "lobby-connect");
@@ -65,20 +53,18 @@ public final class LobbyClient implements AutoCloseable {
         connector.start();
     }
 
-    /** Swing 이벤트 스레드를 막지 않는 비동기 송신 */
+    /** 한 줄 전송. 실패하면 컨트롤러에 알리고 연결을 닫는다 */
     public void send(String line) {
         LineMessages.validate(line);
-        if (closed.get()) return;
+        TcpConnection current = currentConnection();
+        if (current == null) {
+            if (!isClosed()) failSend();
+            return;
+        }
         try {
-            sender.execute(() -> {
-                TcpConnection current = connection.get();
-                if (closed.get()) return;
-                if (current == null) { failSend(); return; }
-                try { current.send(line); }
-                catch (RuntimeException e) { failSend(); }
-            });
-        } catch (RejectedExecutionException e) {
-            if (!closed.get()) failSend();
+            current.send(line);
+        } catch (RuntimeException e) {
+            failSend();
         }
     }
 
@@ -89,10 +75,36 @@ public final class LobbyClient implements AutoCloseable {
 
     @Override
     public void close() {
-        if (!closed.compareAndSet(false, true)) return;
-        TcpConnection current = connection.get();
+        TcpConnection current;
+        synchronized (this) {
+            if (closed) return;
+            closed = true;
+            current = connection;
+        }
         if (current != null) current.close();
-        sender.shutdownNow();
         controller.onClosed();
+    }
+
+    private synchronized void markStarted() {
+        if (closed || started) throw new IllegalStateException("연결은 한 번만 시작합니다.");
+        started = true;
+    }
+
+    /** 닫힌 뒤에 연결이 만들어졌다면 바로 닫고 false */
+    private synchronized boolean setConnection(TcpConnection current) {
+        if (closed) {
+            current.close();
+            return false;
+        }
+        connection = current;
+        return true;
+    }
+
+    private synchronized TcpConnection currentConnection() {
+        return closed ? null : connection;
+    }
+
+    private synchronized boolean isClosed() {
+        return closed;
     }
 }
