@@ -3,9 +3,8 @@ package com.jiphyeonjeon.choseongschool.server;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 
@@ -31,34 +30,29 @@ class RoundTest {
         assertEquals("유나", round.getWinner());
     }
 
-    /** 10명이 같은 순간에 정답을 보내도 FIRST는 딱 1명 */
+    /** 10명이 동시에 정답을 보내도 FIRST는 딱 1명 (50번 반복) */
     @RepeatedTest(50)
     void 동시_정답이어도_승자는_한명() throws InterruptedException {
         Round round = new Round("사필귀정");
-        CountDownLatch start = new CountDownLatch(1);
-        AtomicInteger firstCount = new AtomicInteger();
+        List<String> firsts = Collections.synchronizedList(new ArrayList<>()); // 여러 스레드가 함께 쓰는 리스트
         List<Thread> threads = new ArrayList<>();
 
         for (int i = 0; i < 10; i++) {
             String nickname = "player" + i;
             Thread t = new Thread(() -> {
-                try {
-                    start.await();
-                } catch (InterruptedException e) {
-                    return;
-                }
                 if (round.tryAnswer(nickname, "사필귀정") == Round.Result.FIRST) {
-                    firstCount.incrementAndGet();
+                    firsts.add(nickname);
                 }
             });
             threads.add(t);
+        }
+        for (Thread t : threads) {
             t.start();
         }
-        start.countDown();
         for (Thread t : threads) {
-            t.join();
+            t.join(); // 모든 스레드가 끝날 때까지 기다린다
         }
 
-        assertEquals(1, firstCount.get());
+        assertEquals(1, firsts.size());
     }
 }
