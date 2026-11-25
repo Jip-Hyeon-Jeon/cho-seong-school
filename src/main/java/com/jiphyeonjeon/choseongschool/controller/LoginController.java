@@ -1,18 +1,28 @@
 package com.jiphyeonjeon.choseongschool.controller;
 
 import com.jiphyeonjeon.choseongschool.view.LoginView;
+
 import javax.swing.*;
 
 public class LoginController {
 
     private final LoginView view;
+    private final LoginListener loginListener;
 
-    // 캐릭터 목록
-    private final String[] characters = {"세종대왕", "신사임당", "율곡이이", "퇴계이황", "이순신"};
+    // 캐릭터 목록 (번호 = 대기실 초상 파일 ch번호 = 게임 화면 Avatar 순서)
+    private final String[] characters = {"세종대왕", "퇴계이황", "율곡이이", "신사임당", "이순신"};
     private int currentIndex = 0;
 
+    /** 단독 화면 테스트용: 검증 통과 시 콘솔에 출력만 한다 */
     public LoginController(LoginView view) {
+        this(view, (ip, nickname, characterIndex) -> System.out.println(
+                "입장 시도 -> IP: " + ip + ", 닉네임: " + nickname + ", 캐릭터 번호: " + characterIndex));
+    }
+
+    /** 검증 통과 시 loginListener로 접속 정보를 넘긴다 (클라이언트 메인에서 대기실 연결) */
+    public LoginController(LoginView view, LoginListener loginListener) {
         this.view = view;
+        this.loginListener = loginListener;
         initListeners();
     }
 
@@ -42,8 +52,6 @@ public class LoginController {
     private void handleLogin() {
         String ip = view.getServerIp();
         String nickname = view.getNickname();
-        String selectedCharacter = characters[currentIndex];
-
         if (ip.isEmpty()) {
             JOptionPane.showMessageDialog(view, "서버 IP를 입력해 주세요.");
             return;
@@ -59,7 +67,7 @@ public class LoginController {
         // - nickname이 비어있으면 알림 후 return
         // - nickname이 8자를 초과하면 알림 후 return
 
-        // 검증 통과 시 테스트 출력 메시지
-        System.out.println("입장 시도 -> IP: " + ip + ", 닉네임: " + nickname + ", 캐릭터: " + selectedCharacter);
+        // 검증 통과 시 대기실 연결 담당에게 접속 정보 전달
+        loginListener.onLogin(ip, nickname, currentIndex);
     }
 }

@@ -9,10 +9,17 @@ Java 21, 프로젝트 루트에서 실행한다.
 
 ```powershell
 .\gradlew.bat clean build
-.\gradlew.bat runLobbyServer --args="50024 127.0.0.1"
+.\gradlew.bat runServer
+.\gradlew.bat runClient
 ```
 
-서버는 Enter로 종료한다. 다른 PC를 받을 때는 서버 bind 주소를 `0.0.0.0`으로 지정한다.
+`runServer`는 Spring 앱 하나로 DB와 대기실 TCP 서버를 함께 실행한다(`config.LobbyServerConfiguration`).
+DB 계정은 프로젝트 루트의 `application-secret.properties`(gitignore)나 환경 변수 `DB_USERNAME`, `DB_PASSWORD`로 넣는다.
+대기실 주소와 포트는 `application.properties`의 `lobby.bind-address`(기본 `0.0.0.0`, 같은 Wi-Fi의 다른 PC도 접속), `lobby.port`(기본 50024)로 바꾼다.
+Ctrl+C로 종료하면 Spring이 `LobbyServer.close()`로 소켓과 스레드를 정리한다.
+
+DB 없이 대기실만 확인할 때는 `.\gradlew.bat runLobbyServer --args="50024 127.0.0.1"`을 쓰고 Enter로 종료한다. 이때는 게임 로직이 연결되지 않는다.
+클라이언트(`client.ClientMain`)는 창 하나에서 로그인 → 대기실 → 게임 화면을 차례로 보여 준다.
 테스트는 루프백 소켓으로 정원·반장 권한과 위임·설정 검증·카운트다운 취소/재시작·게임 메시지 전달을 확인한다.
 별도 PR 소스나 미리보기 실행기는 필요하지 않다. 실제 MariaDB와 여러 PC/LAN 환경은 별도 검증 대상이다.
 
@@ -29,16 +36,23 @@ frame.repaint();
 client.connect(serverIp, 50024, nickname, characterIndex);
 ```
 
-캐릭터 번호는 세종/사임당/율곡/퇴계/정약용 순서의 0~4다. 닉네임은 1~8자이며 `|`와 제어 문자는 금지한다.
-로그인 PR #1의 성공 콜백 연결은 남아 있다. 창 종료 시 `client.close()`를 호출하고 재접속은 새 객체로 한다.
-대기실은 공통 1600×900 안에 1200×740을 중앙 배치한다. 다른 화면과 배경·크기 통일은 후속 작업이다.
+캐릭터 번호는 세종대왕/퇴계이황/율곡이이/신사임당/이순신 순서의 0~4다. 로그인, 대기실 초상 파일(`ch번호.png`), 게임 화면 `Avatar`가 같은 번호를 쓴다. 닉네임은 1~8자이며 `|`와 제어 문자는 금지한다.
+실제 조립은 `client.ClientFlow`가 한다. `LoginController`가 검증 후 `LoginListener`로 접속 정보를 넘기면 위 순서로 대기실에 접속한다.
+대기실 `나가기`는 연결을 닫고 로그인 화면으로 돌아간다. 창 종료 시 `client.close()`를 호출하고 재접속은 새 객체로 한다.
+화면 크기는 `Theme`(현재 1200×740)을 따른다.
+
+대기실은 MVC로 나뉜다.
+- Model `model.LobbyState`: 참가자, 반장, 내 번호, 대기·시작 중·게임 중 단계, 카운트다운 숫자, 학칙과 요청 대기 여부, 권한 판단(`canStart` 등)
+- Controller `controller.NetworkLobbyController`: 서버 메시지와 버튼 요청을 받아 상태를 바꾸고 `view.render(state)` 호출. 학칙 변경·시작은 권한 확인 후 서버로 전송
+- View `view.LobbyView`: 상태를 들고 있지 않고 `render(LobbyState)`로 그리기만 함
+다른 화면에서 대기실 상태가 필요하면 `LobbyClient.lobbyState()`로 읽는다(Swing 스레드).
 
 ## 게임 연결
 
 `GameScreenListener`는 Swing 이벤트 스레드에서 호출된다.
 
 - `onStart(GameSession)`: 참가자·학칙 전달 및 게임 화면으로 전환.
-- `onMessage(String)`: 게임 컨트롤러의 `handle(line)` 호출.
+- `onMessage(String)`: 게임 컨트롤러의 `handle(line)` 호출. 게임 시작 후 대기실 메시지가 아닌 줄은 이름과 관계없이 모두 전달한다.
 - `onPlayers(List<ParticipantInfo>)`: 게임 중 참가자 목록 갱신.
 - `onDisconnected(String)`, `onError(String)`: 입력 비활성화 또는 오류 안내.
 
@@ -46,9 +60,13 @@ PR #2의 컨트롤러에는 `new GameRoomController(gameView, client::send)`로 
 `gameView.setPlayers(...)`에는 참가자의 닉네임 목록을 전달한다. 소켓·수신 스레드를 새로 만들지 않는다.
 
 서버는 `LobbyServer(bindAddress, port, GameEvents)`로 게임 로직을 연결한다.
+`GameEvents` 구현체를 `@Component`로 등록하면 `runServer` 실행 시 Spring이 자동으로 주입한다. `WordService` 같은 DB Bean도 생성자로 받을 수 있다.
 `onStart`에서 출제·문제 타이머를 시작하고 `onAnswer`에서 정답을 판정한 뒤 `broadcast`로 전송한다.
-DB 조회로 방 이벤트 스레드를 막지 않는다. `onLeave`, `onRoomEmpty`와 서버 종료 시 타이머·자원을 정리한다.
-기본 서버 실행기는 게임 로직이 없어 카운트다운까지만 제공한다.
+`GameEvents`는 방 상태를 잠근(synchronized) 채로 호출되므로 DB 조회 같은 긴 작업으로 오래 막지 않는다. `onLeave`, `onRoomEmpty`와 서버 종료 시 타이머·자원을 정리한다.
+게임을 끝낼 때는 `GAME_END|닉네임|점수|...`를 마지막으로 보낸다. 서버는 이 메시지를 전달한 뒤 방을 대기 상태로 되돌리고 `SETTINGS`를 다시 보낸다.
+그 뒤 같은 게임이 늦게 보내는 메시지는 무시되며, 반장은 다시 시작할 수 있고 새 학동도 입장할 수 있다.
+클라이언트는 `GAME_END`를 받으면 결과 화면을 보여 주고, `서당 마루로`는 같은 연결의 대기실로, `나가기`는 로그인 화면으로 돌아간다.
+`GameEvents` Bean이 없거나 `runLobbyServer`로 실행하면 게임 로직이 없어 카운트다운까지만 제공한다.
 
 ## 대기실 메시지 제안
 
@@ -67,4 +85,4 @@ UTF-8 한 줄 메시지, 구분자 `|`, 최대 4096자. 아래 규약은 팀 리
 기본 학칙은 하/10문제/30초다. 게임 중 새 입장과 설정 변경은 거부한다.
 문제 타이머의 남은 시간 메시지와 게임 종료 후 대기실 복귀 규약은 아직 없다.
 DB PR #5의 하/중/상은 `Difficulty.getLabel()`과 대응한다. 실제 출제·DB 연결은 별도 구현이 필요하다.
-정약용 이미지는 준비 중 표시이며, 기와·단청은 Java2D 재현이라 Figma 원본과 완전히 같지는 않다.
+이순신 초상(ch4.png)은 PR #10 병합 전까지 "초상 준비 중"으로 표시하며, 기와·단청은 Java2D 재현이라 Figma 원본과 완전히 같지는 않다.
