@@ -1,20 +1,27 @@
 package com.jiphyeonjeon.choseongschool.client;
 
+import com.jiphyeonjeon.choseongschool.common.Theme;
 import com.jiphyeonjeon.choseongschool.controller.GameRoomController;
+import com.jiphyeonjeon.choseongschool.controller.GameRoomController.FinalScore;
 import com.jiphyeonjeon.choseongschool.controller.LoginController;
+import com.jiphyeonjeon.choseongschool.controller.ResultController;
 import com.jiphyeonjeon.choseongschool.model.GameSession;
 import com.jiphyeonjeon.choseongschool.model.LobbySettings;
 import com.jiphyeonjeon.choseongschool.model.ParticipantInfo;
 import com.jiphyeonjeon.choseongschool.view.LobbyContainer;
 import com.jiphyeonjeon.choseongschool.view.LobbyView;
+import com.jiphyeonjeon.choseongschool.model.Player;
 import com.jiphyeonjeon.choseongschool.view.Avatar;
 import com.jiphyeonjeon.choseongschool.view.GameRoomView;
 import com.jiphyeonjeon.choseongschool.view.LoginView;
+import com.jiphyeonjeon.choseongschool.view.ResultView;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import javax.swing.JOptionPane;
 
 /**
- * 클라이언트 화면 흐름: 로그인 → 대기실 → 게임.
+ * 클라이언트 화면 흐름: 로그인 → 대기실 → 게임 → 결과 → (대기실 또는 로그인).
  * 화면과 컨트롤러를 만들어 서로 연결하고, 소켓 연결(LobbyClient)은 대기실과 게임 화면이 함께 쓴다.
  * 모든 메서드는 Swing 이벤트 스레드에서 실행된다.
  */
@@ -53,7 +60,7 @@ public final class ClientFlow {
         connection = next;
         // 접속 실패·입장 거절 시 대기실에 안내가 뜨고, 나가기를 누르면 로그인으로 돌아간다
         next.lobbyView.getExitButton().addActionListener(e -> backToLogin());
-        host.show(new LobbyContainer(next.lobbyView));
+        host.show(next.lobbyScreen);
     }
 
     /** 대기실 나가기, 게임 중 연결 끊김 → 연결을 정리하고 로그인 화면으로 */
@@ -79,7 +86,10 @@ public final class ClientFlow {
     private final class Connection implements GameScreenListener {
 
         private final LobbyView lobbyView = new LobbyView();
+        private final LobbyContainer lobbyScreen = new LobbyContainer(lobbyView);
         private final LobbyClient client = new LobbyClient(lobbyView, this);
+        /** 닉네임 → 캐릭터 번호 (결과 화면 초상용, 게임 중 나간 사람도 남겨 둔다) */
+        private final Map<String, Integer> characters = new HashMap<>();
         private GameRoomView gameView;
         private GameRoomController gameController;
 
@@ -95,6 +105,9 @@ public final class ClientFlow {
             }
             gameView = new GameRoomView();
             gameController = new GameRoomController(gameView, client::send); // 같은 소켓으로 답 제출
+            gameController.setGameEndListener(this::showResult);
+            characters.clear();
+            session.players().forEach(p -> characters.put(p.nickname(), p.character()));
             LobbySettings settings = session.settings();
             gameView.setRound(1, settings.rounds(), "난이도 " + settings.difficulty().getLabel());
             gameView.setTimeLeft(settings.seconds(), settings.seconds());
@@ -113,7 +126,7 @@ public final class ClientFlow {
         @Override
         public void onPlayers(List<ParticipantInfo> players) {
             if (active() && gameView != null) {
-                showPlayers(players, lobbyView.getHostId());
+                showPlayers(players, client.lobbyState().hostId());
             }
         }
 
@@ -124,6 +137,36 @@ public final class ClientFlow {
             }
             JOptionPane.showMessageDialog(gameView, message);
             backToLogin();
+        }
+
+        /** GAME_END → 결과 화면. 서버는 이미 방을 대기 상태로 되돌렸다 */
+        private void showResult(List<FinalScore> scores) {
+            if (!active()) {
+                return;
+            }
+            List<Player> players = scores.stream()
+                    .map(s -> new Player(s.nickname(), portrait(s.nickname()), s.score()))
+                    .toList();
+            ResultView resultView = new ResultView();
+            new ResultController(resultView, this::backToLobby, ClientFlow.this::backToLogin)
+                    .showFinalResult(players);
+            host.show(resultView);
+        }
+
+        /** 결과 화면 "서당 마루로" → 같은 연결 그대로 대기실 화면 */
+        private void backToLobby() {
+            if (!active()) {
+                return;
+            }
+            gameView = null;
+            gameController = null;
+            host.show(lobbyScreen);
+        }
+
+        /** 캐릭터 번호 = 대기실 초상 파일 번호 */
+        private String portrait(String nickname) {
+            Integer character = characters.get(nickname);
+            return character == null ? null : Theme.portraitPath(character);
         }
 
         private void showPlayers(List<ParticipantInfo> players, String hostId) {

@@ -20,13 +20,9 @@ class NetworkCountdownCheckTest {
 
         Client(LobbyServer server, String name) throws Exception {
             view = edt(() -> new LobbyView());
-            controller = new NetworkLobbyController(view);
             connection = new TcpConnection("127.0.0.1", server.getPort());
-            edt(() -> {
-                view.setSettingsRequest(s -> connection.send("SET_SETTINGS|" + s.fields()));
-                view.setStartRequest(() -> connection.send("START"));
-                return null;
-            });
+            // 화면 버튼 요청은 컨트롤러가 대기실 상태로 권한을 확인한 뒤 이 연결로 보낸다
+            controller = new NetworkLobbyController(view, session -> { }, connection::send);
             connection.startReceiving(line -> { controller.handle(line); inbox.add(line); }, controller::onClosed);
             connection.send("JOIN|" + name + "|0");
         }
@@ -60,7 +56,7 @@ class NetworkCountdownCheckTest {
                 student.expect("SETTINGS|LOW|10|30");
                 student.connection.send("START");
                 student.denied("NOT_HOST");
-                check(edt(() -> student.view.getViewState() == RoomState.WAITING), "학동 시작 거부");
+                check(edt(() -> student.controller.state().phase() == RoomState.WAITING), "학동 시작 거부");
 
                 // 실제 시작 버튼을 눌러 요청합니다.
                 edt(() -> { host.view.getStartButton().doClick(); return null; });
@@ -88,10 +84,10 @@ class NetworkCountdownCheckTest {
                 for (int number = 3; number >= 1; number--) {
                     student.expect("COUNTDOWN|" + number);
                     final int expected = number;
-                    check(edt(() -> student.view.getCountdownNumber() == expected), "화면 숫자 일치");
+                    check(edt(() -> student.controller.state().countdownNumber() == expected), "화면 숫자 일치");
                 }
                 student.expect("GAME_START");
-                check(edt(() -> student.view.getViewState() == RoomState.PLAYING
+                check(edt(() -> student.controller.state().phase() == RoomState.PLAYING
                         && !student.view.isCountdownVisible()), "시작 확정 및 오버레이 제거");
                 student.connection.send("START");
                 student.denied("NOT_WAITING");
@@ -112,13 +108,13 @@ class NetworkCountdownCheckTest {
                 host.expect("COUNTDOWN|3"); student.expect("COUNTDOWN|3");
                 student.close();
                 host.expect("PLAYERS|1|1|1|jisu|0"); host.expect("START_CANCELLED|PLAYER_LEFT");
-                check(edt(() -> host.view.getViewState() == RoomState.WAITING), "학동 퇴장 취소");
+                check(edt(() -> host.controller.state().phase() == RoomState.WAITING), "학동 퇴장 취소");
                 if (host.inbox.poll(3200, TimeUnit.MILLISECONDS) != null) throw new AssertionError("취소 후 숫자가 남음");
                 // 서버 종료 중 오버레이가 남는지도 검사합니다.
                 host.connection.send("START"); host.expect("COUNTDOWN|3");
                 server.close();
                 long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(3);
-                while (edt(() -> !host.view.getParticipants().isEmpty())) {
+                while (edt(() -> !host.controller.state().participants().isEmpty())) {
                     if (System.nanoTime() > deadline) throw new AssertionError("연결 종료 처리 지연");
                     Thread.sleep(10);
                 }

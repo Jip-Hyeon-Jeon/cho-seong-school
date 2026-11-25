@@ -39,7 +39,13 @@ client.connect(serverIp, 50024, nickname, characterIndex);
 캐릭터 번호는 세종대왕/퇴계이황/율곡이이/신사임당/이순신 순서의 0~4다. 로그인, 대기실 초상 파일(`ch번호.png`), 게임 화면 `Avatar`가 같은 번호를 쓴다. 닉네임은 1~8자이며 `|`와 제어 문자는 금지한다.
 실제 조립은 `client.ClientFlow`가 한다. `LoginController`가 검증 후 `LoginListener`로 접속 정보를 넘기면 위 순서로 대기실에 접속한다.
 대기실 `나가기`는 연결을 닫고 로그인 화면으로 돌아간다. 창 종료 시 `client.close()`를 호출하고 재접속은 새 객체로 한다.
-화면 크기는 `GameConstants.Screen`(현재 1200×740)을 따른다.
+화면 크기는 `Theme`(현재 1200×740)을 따른다.
+
+대기실은 MVC로 나뉜다.
+- Model `model.LobbyState`: 참가자, 반장, 내 번호, 대기·시작 중·게임 중 단계, 카운트다운 숫자, 학칙과 요청 대기 여부, 권한 판단(`canStart` 등)
+- Controller `controller.NetworkLobbyController`: 서버 메시지와 버튼 요청을 받아 상태를 바꾸고 `view.render(state)` 호출. 학칙 변경·시작은 권한 확인 후 서버로 전송
+- View `view.LobbyView`: 상태를 들고 있지 않고 `render(LobbyState)`로 그리기만 함
+다른 화면에서 대기실 상태가 필요하면 `LobbyClient.lobbyState()`로 읽는다(Swing 스레드).
 
 ## 게임 연결
 
@@ -57,6 +63,9 @@ PR #2의 컨트롤러에는 `new GameRoomController(gameView, client::send)`로 
 `GameEvents` 구현체를 `@Component`로 등록하면 `runServer` 실행 시 Spring이 자동으로 주입한다. `WordService` 같은 DB Bean도 생성자로 받을 수 있다.
 `onStart`에서 출제·문제 타이머를 시작하고 `onAnswer`에서 정답을 판정한 뒤 `broadcast`로 전송한다.
 `GameEvents`는 방 상태를 잠근(synchronized) 채로 호출되므로 DB 조회 같은 긴 작업으로 오래 막지 않는다. `onLeave`, `onRoomEmpty`와 서버 종료 시 타이머·자원을 정리한다.
+게임을 끝낼 때는 `GAME_END|닉네임|점수|...`를 마지막으로 보낸다. 서버는 이 메시지를 전달한 뒤 방을 대기 상태로 되돌리고 `SETTINGS`를 다시 보낸다.
+그 뒤 같은 게임이 늦게 보내는 메시지는 무시되며, 반장은 다시 시작할 수 있고 새 학동도 입장할 수 있다.
+클라이언트는 `GAME_END`를 받으면 결과 화면을 보여 주고, `서당 마루로`는 같은 연결의 대기실로, `나가기`는 로그인 화면으로 돌아간다.
 `GameEvents` Bean이 없거나 `runLobbyServer`로 실행하면 게임 로직이 없어 카운트다운까지만 제공한다.
 
 ## 대기실 메시지 제안

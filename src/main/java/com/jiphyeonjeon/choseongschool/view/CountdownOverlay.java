@@ -1,5 +1,6 @@
 package com.jiphyeonjeon.choseongschool.view;
 
+import com.jiphyeonjeon.choseongschool.common.Theme;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import javax.swing.*;
@@ -16,18 +17,18 @@ public class CountdownOverlay extends JPanel {
         addMouseListener(new MouseAdapter() { });
 
         JPanel card = new JPanel(new BorderLayout(0, 16));
-        card.setBackground(LobbyView.CARD);
+        card.setBackground(Theme.PAPER);
         card.setBorder(new CompoundBorder(
-                new LineBorder(LobbyView.GOLD, 3),
+                new LineBorder(Theme.GOLD, 3),
                 new EmptyBorder(30, 64, 30, 64)));
         JLabel title = new JLabel("잠시 후 과거를 시작합니다", SwingConstants.CENTER);
-        title.setFont(new Font("맑은 고딕", Font.BOLD, 25));
-        title.setForeground(LobbyView.INK);
-        number.setFont(new Font("Serif", Font.BOLD, 150));
-        number.setForeground(LobbyView.RED);
+        title.setFont(Theme.batangBold(25));
+        title.setForeground(Theme.TEXT);
+        number.setFont(Theme.batangBold(150));
+        number.setForeground(Theme.RED);
         JLabel subtitle = new JLabel("마음을 가다듬고 준비해 주세요", SwingConstants.CENTER);
-        subtitle.setFont(new Font("맑은 고딕", Font.PLAIN, 18));
-        subtitle.setForeground(new Color(103, 86, 62));
+        subtitle.setFont(Theme.batang(18));
+        subtitle.setForeground(Theme.TEXT_SUB);
         card.add(title, BorderLayout.NORTH);
         card.add(number, BorderLayout.CENTER);
         card.add(subtitle, BorderLayout.SOUTH);
@@ -41,7 +42,7 @@ public class CountdownOverlay extends JPanel {
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-        g.setColor(new Color(28, 24, 20, 120));
+        g.setColor(Theme.OVERLAY);
         g.fillRect(0, 0, getWidth(), getHeight());
     }
 }

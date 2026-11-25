@@ -5,6 +5,7 @@ import com.jiphyeonjeon.choseongschool.controller.NetworkLobbyController;
 import com.jiphyeonjeon.choseongschool.network.LineMessages;
 import com.jiphyeonjeon.choseongschool.common.LobbyConstants;
 import com.jiphyeonjeon.choseongschool.view.LobbyView;
+import com.jiphyeonjeon.choseongschool.model.LobbyState;
 import com.jiphyeonjeon.choseongschool.model.ParticipantInfo;
 import com.jiphyeonjeon.choseongschool.network.TcpConnection;
 
@@ -31,9 +32,13 @@ public final class LobbyClient implements AutoCloseable {
 
     public LobbyClient(LobbyView view, GameScreenListener gameScreen) {
         if (!SwingUtilities.isEventDispatchThread()) throw new IllegalStateException("Swing 스레드에서 생성하세요.");
-        controller = new NetworkLobbyController(view, gameScreen);
-        view.setSettingsRequest(settings -> send("SET_SETTINGS|" + settings.fields()));
-        view.setStartRequest(() -> send("START"));
+        // 학칙 변경·시작 버튼 요청은 컨트롤러가 권한을 확인한 뒤 이 연결로 보낸다
+        controller = new NetworkLobbyController(view, gameScreen, this::send);
+    }
+
+    /** 대기실 상태 (참가자·반장·학칙 등 읽기용). Swing 스레드에서만 읽는다 */
+    public LobbyState lobbyState() {
+        return controller.state();
     }
 
     /** 로그인에서 선택한 캐릭터 번호(0~4) 수신 및 별도 스레드의 서버 연결 */

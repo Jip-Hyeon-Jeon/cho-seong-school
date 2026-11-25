@@ -1,6 +1,6 @@
 package com.jiphyeonjeon.choseongschool.common;
 
-/** 대기실 클라이언트·서버 공용 상수. 화면 크기는 GameConstants.Screen 참조 */
+/** 대기실 클라이언트·서버 공용 상수. 화면 크기는 Theme 참조 */
 public final class LobbyConstants {
     public static final int MAX_PLAYERS = 5;
     public static final int MAX_NICKNAME_LENGTH = 8;

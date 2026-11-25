@@ -28,7 +28,7 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
-import com.jiphyeonjeon.choseongschool.common.GameConstants.Screen;
+import com.jiphyeonjeon.choseongschool.common.Theme;
 import com.jiphyeonjeon.choseongschool.controller.ResultController;
 import com.jiphyeonjeon.choseongschool.model.Player;
 
@@ -36,24 +36,6 @@ import com.jiphyeonjeon.choseongschool.model.Player;
 public class ResultView extends JPanel {
 
 	private static final long serialVersionUID = 1L;
-
-	//색 (피그마 6. 최종 결과)
-	private static final Color BACKGROUND = new Color(0xF4EBD9);
-	private static final Color PAPER = new Color(0xFBF6EA);
-	private static final Color PAPER_LINE = new Color(0xC9B58E);
-	private static final Color INK = new Color(0x2B2420);
-	private static final Color SUB_INK = new Color(0x6B5B4B);
-	private static final Color SCORE = new Color(0x8C5A12);
-	private static final Color GOLD = new Color(0xD7A542);
-	private static final Color CREAM = new Color(0xF6E7C1);
-	private static final Color PLAQUE = new Color(0x4A2F1B);
-	private static final Color WINNER_BACK = new Color(0x3B6690);
-	private static final Color RED = new Color(0xB8402E);
-	private static final Color RED_DARK = new Color(0x7E2A1E);
-	private static final Color BLUE = new Color(0x2A4A6B);
-	private static final Color BLUE_DARK = new Color(0x1B3149);
-	private static final Color BROWN = new Color(0x7A5232);
-	private static final Color GRAY = new Color(0x8A8178);
 
 	//글꼴: 고운바탕
 	private static final Font BATANG = Theme.batang(12f);
@@ -68,14 +50,14 @@ public class ResultView extends JPanel {
 
 	public ResultView() {
 		setLayout(null);
-		setPreferredSize(new Dimension(Screen.WIDTH, Screen.HEIGHT));
-		setBackground(BACKGROUND);
+		setPreferredSize(new Dimension(Theme.SCREEN_WIDTH, Theme.SCREEN_HEIGHT));
+		setBackground(Theme.BACKGROUND);
 
-		waitingRoomBtn = new ResultButton("서당 마루로", RED, RED_DARK, CREAM);
+		waitingRoomBtn = new ResultButton("서당 마루로", Theme.RED, Theme.RED_DARK, Theme.TEXT_LIGHT);
 		waitingRoomBtn.setBounds(423, 656, 200, 50);
 		add(waitingRoomBtn);
 
-		exitBtn = new ResultButton("나가기", PAPER, BROWN, INK);
+		exitBtn = new ResultButton("나가기", Theme.PAPER, Theme.BROWN, Theme.TEXT);
 		exitBtn.setBounds(637, 656, 140, 50);
 		add(exitBtn);
 	}
@@ -130,49 +112,49 @@ public class ResultView extends JPanel {
 
 	//지붕, 기둥, 마루, 구름, 현판
 	private void paintFrame(Graphics2D g2) {
-		drawImage(g2, "/images/result/roof.png", 0, 0, 1200, 72);
-		drawImage(g2, "/images/result/dancheong.png", 0, 72, 1200, 18);
+		drawImage(g2, "/images/result/roof.png", 0, 0, Theme.SCREEN_WIDTH, 72);
+		drawImage(g2, "/images/result/dancheong.png", 0, 72, Theme.SCREEN_WIDTH, 18);
 
 		for (int x : new int[] { 0, 1176 }) {
-			drawBox(g2, x, 90, 24, 626, 0, 2, new Color(0xA63A2B), RED_DARK);
-			drawBox(g2, x - 4, 90, 32, 10, 0, 0, new Color(0x2F6B5E), null);
-			drawBox(g2, x - 6, 706, 36, 12, 3, 0, new Color(0x9A958C), null);
+			drawBox(g2, x, 90, 24, 626, 0, 2, Theme.PILLAR, Theme.RED_DARK);
+			drawBox(g2, x - 4, 90, 32, 10, 0, 0, Theme.GREEN, null);
+			drawBox(g2, x - 6, 706, 36, 12, 3, 0, Theme.STONE, null);
 		}
 
-		drawBox(g2, 0, 716, 1200, 24, 0, 0, new Color(0x8A5E38), null);
+		drawBox(g2, 0, 716, Theme.SCREEN_WIDTH, 24, 0, 0, Theme.FLOOR, null);
 		for (int x = 150; x <= 1050; x += 150) {
-			drawBox(g2, x, 716, 2, 24, 0, 0, new Color(0x5A3B22), null);
+			drawBox(g2, x, 716, 2, 24, 0, 0, Theme.FLOOR_LINE, null);
 		}
 
 		drawImage(g2, "/images/result/cloud.png", 110, 108, 121, 58);
 		drawImage(g2, "/images/result/cloud.png", 960, 108, 121, 58);
 
-		drawBox(g2, 410, 102, 380, 80, 6, 4, PLAQUE, GOLD);
-		drawCenter(g2, "오늘의 장원", BATANG_BOLD, 62, CREAM, 600, 142, 350);
+		drawBox(g2, 410, 102, 380, 80, 6, 4, Theme.BROWN_DARK, Theme.GOLD);
+		drawCenter(g2, "오늘의 장원", BATANG_BOLD, 62, Theme.TEXT_LIGHT, 600, 142, 350);
 	}
 
 	//왼쪽: 장원 초상, 이름, 점수
 	private void paintWinner(Graphics2D g2) {
-		drawBox(g2, 48, 194, 420, 450, 8, 0, WINNER_BACK, null);
+		drawBox(g2, 48, 194, 420, 450, 8, 0, Theme.WINNER_BACKGROUND, null);
 		Shape oldClip = g2.getClip();
 		g2.clip(new RoundRectangle2D.Double(48, 194, 420, 450, 16, 16));
 		drawImage(g2, "/images/result/landscape.png", 48, 194, 420, 280);
 		g2.setClip(oldClip);
-		drawBox(g2, 48, 194, 420, 450, 8, 4, null, GOLD);
+		drawBox(g2, 48, 194, 420, 450, 8, 4, null, Theme.GOLD);
 
 		List<Player> winners = getWinners();
 		if (winners.isEmpty()) {
 			//결과가 오기 전에는 명패를 그리지 않음
 			if (!players.isEmpty()) {
-				drawBox(g2, 98, 486, 320, 75, 6, 3, PAPER, GOLD);
-				drawCenter(g2, "오늘은 장원이 없소", BATANG_BOLD, 36, INK, 258, 523, 290);
+				drawBox(g2, 98, 486, 320, 75, 6, 3, Theme.PAPER, Theme.GOLD);
+				drawCenter(g2, "오늘은 장원이 없소", BATANG_BOLD, 36, Theme.TEXT, 258, 523, 290);
 			}
 			return;
 		}
 
 		//초상: 한 명이면 크게, 공동 우승이면 작게 나란히
 		int count = winners.size();
-		int size = (count == 1) ? 150 : Math.min(120, 390 / count - 8);
+		int size = (count == 1) ? Theme.PORTRAIT_SIZE_LARGE : Math.min(120, 390 / count - 8);
 		int step = size + 8;
 		int startX = 258 - (step * count - 8) / 2;
 		int y = 476 - size;
@@ -194,46 +176,46 @@ public class ResultView extends JPanel {
 		int nameWidth = textWidth(g2, name, BATANG_BOLD, 50, 265);
 		int plateWidth = 25 + 55 + 12 + nameWidth + 25;
 		int plateX = 258 - plateWidth / 2;
-		drawBox(g2, plateX, 486, plateWidth, 75, 6, 3, PAPER, GOLD);
-		drawBox(g2, plateX + 25, 505, 55, 36, 5, 2, RED, RED_DARK);
-		drawCenter(g2, "장원", BATANG_BOLD, 24, CREAM, plateX + 52, 523, 45);
-		drawLeft(g2, name, BATANG_BOLD, 50, INK, plateX + 92, 523, 265);
+		drawBox(g2, plateX, 486, plateWidth, 75, 6, 3, Theme.PAPER, Theme.GOLD);
+		drawBox(g2, plateX + 25, 505, 55, 36, 5, 2, Theme.RED, Theme.RED_DARK);
+		drawCenter(g2, "장원", BATANG_BOLD, 24, Theme.TEXT_LIGHT, plateX + 52, 523, 45);
+		drawLeft(g2, name, BATANG_BOLD, 50, Theme.TEXT, plateX + 92, 523, 265);
 
 		//점수
 		String score = winners.get(0).getScore() + "점";
 		int scoreWidth = textWidth(g2, score, BATANG_BOLD, 22, 200);
 		int boxWidth = 10 + 24 + 6 + scoreWidth + 14;
 		int boxX = 258 - boxWidth / 2;
-		drawBox(g2, boxX, 571, boxWidth, 39, 14, 0, PAPER, null);
+		drawBox(g2, boxX, 571, boxWidth, 39, 14, 0, Theme.PAPER, null);
 		drawImage(g2, "/images/result/coin.png", boxX + 10, 578, 24, 24);
-		drawLeft(g2, score, BATANG_BOLD, 22, SCORE, boxX + 40, 590, 200);
+		drawLeft(g2, score, BATANG_BOLD, 22, Theme.TEXT_SCORE, boxX + 40, 590, 200);
 	}
 
 	//오른쪽: 방(순위표)
 	private void paintRanking(Graphics2D g2) {
-		g2.setColor(PAPER);
+		g2.setColor(Theme.PAPER);
 		g2.fillRect(504, 204, 632, 430);
-		g2.setColor(PAPER_LINE);
+		g2.setColor(Theme.PAPER_BORDER);
 		g2.fillRect(504, 204, 632, 2);
 		g2.fillRect(504, 632, 632, 2);
 
 		for (int x : new int[] { 488, 1136 }) {
-			drawBox(g2, x, 194, 16, 450, 8, 2, BROWN, INK);
-			g2.setColor(GOLD);
+			drawBox(g2, x, 194, 16, 450, 8, 2, Theme.BROWN, Theme.TEXT);
+			g2.setColor(Theme.GOLD);
 			g2.fillOval(x + 4, 201, 8, 8);
 			g2.fillOval(x + 4, 629, 8, 8);
 		}
 
 		//고운바탕에 없는 한자라서 윈도우 바탕체 사용
-		Font hanja = new Font("바탕", Font.BOLD, 22);
+		Font hanja = Theme.hanjaFont(22);
 		int x = 530;
-		drawLeft(g2, "방", BATANG_BOLD, 46, INK, x, 249, 60);
+		drawLeft(g2, "방", BATANG_BOLD, 46, Theme.TEXT, x, 249, 60);
 		x += textWidth(g2, "방", BATANG_BOLD, 46, 60) + 10;
-		drawLeft(g2, "(榜)", hanja, 22, SUB_INK, x, 253, 60);
+		drawLeft(g2, "(榜)", hanja, 22, Theme.TEXT_SUB, x, 253, 60);
 		x += textWidth(g2, "(榜)", hanja, 22, 60) + 10;
-		drawLeft(g2, "최종 순위 · 동점은 같은 등수", BATANG, 14, SUB_INK, x, 258, 250);
+		drawLeft(g2, "최종 순위 · 동점은 같은 등수", BATANG, 14, Theme.TEXT_SUB, x, 258, 250);
 
-		g2.setColor(RED);
+		g2.setColor(Theme.RED);
 		g2.fillRect(530, 286, 580, 2);
 
 		//5명이면 종이를 넘치므로 줄 높이를 줄임
@@ -248,34 +230,34 @@ public class ResultView extends JPanel {
 		int centerY = y + height / 2 - 1;
 		int rank = getRank(player);
 
-		Color fill = GRAY;
-		Color border = SUB_INK;
+		Color fill = Theme.GRAY;
+		Color border = Theme.TEXT_SUB;
 		String label = rank + "등";
 		if (rank == 1) {
-			fill = RED;
-			border = RED_DARK;
+			fill = Theme.RED;
+			border = Theme.RED_DARK;
 			if (player.getScore() > 0) {
 				label = "장원";
 			}
 		} else if (rank == 2) {
-			fill = BLUE;
-			border = BLUE_DARK;
+			fill = Theme.BLUE;
+			border = Theme.BLUE_DARK;
 		} else if (rank == 3) {
-			fill = BROWN;
-			border = PLAQUE;
+			fill = Theme.BROWN;
+			border = Theme.BROWN_DARK;
 		}
 		drawBox(g2, 536, centerY - 19, 58, 38, 5, 2, fill, border);
-		drawCenter(g2, label, BATANG_BOLD, 17, CREAM, 565, centerY, 50);
+		drawCenter(g2, label, BATANG_BOLD, 17, Theme.TEXT_LIGHT, 565, centerY, 50);
 
 		drawPortrait(g2, player, 610, centerY - 23, 46);
-		drawLeft(g2, player.getNickname(), BATANG_BOLD, 22, INK, 672, centerY, 300);
+		drawLeft(g2, player.getNickname(), BATANG_BOLD, 22, Theme.TEXT, 672, centerY, 300);
 
 		String score = player.getScore() + "점";
 		int scoreX = 1104 - textWidth(g2, score, BATANG_BOLD, 22, 200);
 		drawImage(g2, "/images/result/coin.png", scoreX - 40, centerY - 12, 24, 24);
-		drawLeft(g2, score, BATANG_BOLD, 22, SCORE, scoreX, centerY, 200);
+		drawLeft(g2, score, BATANG_BOLD, 22, Theme.TEXT_SCORE, scoreX, centerY, 200);
 
-		g2.setColor(PAPER_LINE);
+		g2.setColor(Theme.PAPER_BORDER);
 		g2.setStroke(new BasicStroke(1.5f));
 		g2.drawLine(530, y + height - 1, 1110, y + height - 1);
 	}
@@ -284,7 +266,7 @@ public class ResultView extends JPanel {
 	private void drawPortrait(Graphics2D g2, Player player, int x, int y, int size) {
 		Image image = getImage(player.getCharacter());
 		if (image == null) {
-			g2.setColor(PAPER_LINE);
+			g2.setColor(Theme.PAPER_BORDER);
 			g2.fill(new Ellipse2D.Double(x, y, size, size));
 			return;
 		}
@@ -416,9 +398,9 @@ public class ResultView extends JPanel {
 			frame.setVisible(true);
 
 			controller.showFinalResult(List.of(
-					new Player("가", "/lobby/portraits/ch3.png", 58),
-					new Player("나", "/lobby/portraits/ch0.png", 44),
-					new Player("다", "/lobby/portraits/ch2.png", 31)));
+					new Player("가", Theme.portraitPath(3), 58),
+					new Player("나", Theme.portraitPath(0), 44),
+					new Player("다", Theme.portraitPath(2), 31)));
 		});
 	}
 }

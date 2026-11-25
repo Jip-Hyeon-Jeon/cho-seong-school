@@ -1,5 +1,6 @@
 package com.jiphyeonjeon.choseongschool.server;
 
+import com.jiphyeonjeon.choseongschool.common.GameConstants.Protocol;
 import com.jiphyeonjeon.choseongschool.common.LobbyConstants;
 import com.jiphyeonjeon.choseongschool.model.Difficulty;
 import com.jiphyeonjeon.choseongschool.model.LobbySettings;
@@ -198,9 +199,20 @@ public final class LobbyServer implements AutoCloseable {
         return line -> {
             LineMessages.validate(line);
             synchronized (this) {
-                if (running && state == RoomState.PLAYING && countdownId == gameId) broadcast(line);
+                if (!running || state != RoomState.PLAYING || countdownId != gameId) return;
+                broadcast(line);
+                if (line.equals(Protocol.GAME_END) || line.startsWith(Protocol.GAME_END + Protocol.SEPARATOR)) {
+                    endGame();
+                }
             }
         };
+    }
+
+    /** 게임 로직이 GAME_END를 보내면 방을 대기 상태로 되돌려 다시 시작·입장할 수 있게 한다 */
+    private void endGame() {
+        state = RoomState.WAITING;
+        countdownId++; // 끝난 게임이 늦게 보내는 메시지는 무시
+        for (Session member : members.values()) member.send("SETTINGS|" + settings.fields());
     }
 
     private void broadcast(String line) {
