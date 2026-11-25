@@ -1,8 +1,6 @@
 package com.jiphyeonjeon.choseongschool.server;
-import com.jiphyeonjeon.choseongschool.model.*;
-import com.jiphyeonjeon.choseongschool.view.*;
 import com.jiphyeonjeon.choseongschool.client.*;
-import com.jiphyeonjeon.choseongschool.network.*;
+import com.jiphyeonjeon.choseongschool.client.network.TcpConnection;
 
 import java.util.concurrent.*;
 

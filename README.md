@@ -32,19 +32,25 @@ Java 21이 필요하고, 프로젝트 루트에서 실행합니다.
 
 ## 패키지 구조
 
-패키지는 역할별로 나뉩니다. 클라이언트(Swing)와 서버(Spring + 소켓)가 한 프로젝트에 있어서 아래 표로 위치를 구분합니다.
+`com.jiphyeonjeon.choseongschool` 아래가 클라이언트(Swing), 서버(Spring + 소켓), 공통으로 나뉩니다. `client`와 `server`는 서로를 참조하지 않고, 둘 다 `common`의 메시지 규약으로만 연결됩니다.
 
-| 패키지 | 역할 | 쓰는 쪽 |
-|---|---|---|
-| `view` | 로그인·대기실·게임·결과 화면을 그리기만 함 | 클라이언트 |
-| `controller` | 화면 이벤트와 서버 메시지를 받아 상태를 바꾸고 화면 갱신 | 클라이언트 |
-| `model` | 참가자, 대기실 상태, 학칙, 난이도 등 데이터와 규칙 | 둘 다 |
-| `client` | 화면 전환과 서버 접속을 조립 (`ClientMain`이 시작점) | 클라이언트 |
-| `network` | 한 줄 단위 TCP 송수신 | 둘 다 |
-| `server` | 대기실 소켓 서버, 게임 로직 연결점(`GameEvents`) | 서버 |
-| `config` · `entity` · `repository` · `service` | Spring 설정과 단어 DB 조회 | 서버 |
-| `common` | 공용 상수와 화면 테마 | 둘 다 |
-| `timer` | 라운드 타이머(아직 게임 로직에 연결되지 않음) | 서버 |
+```
+choseongschool/
+├─ ChoSeongSchoolApplication      Spring Boot 시작점 (`runServer`)
+├─ client/                        `runClient`로 뜨는 게임 창
+│   ├─ view/                      화면 (로그인·대기실·게임·결과, `Theme`)
+│   ├─ controller/                화면 이벤트와 서버 메시지 처리
+│   ├─ model/                     대기실 상태(`LobbyState`), 게임 세션, 결과 점수
+│   └─ network/                   TCP 연결(`TcpConnection`)
+├─ server/                        `runServer`로 뜨는 서버
+│   ├─ LobbyServer, GameEvents    대기실 소켓 서버와 게임 로직 연결점
+│   ├─ config/ entity/ repository/ service/    Spring 설정과 단어 DB, 게임 진행
+│   └─ timer/                     라운드 타이머
+└─ common/                        양쪽이 함께 쓰는 것
+    ├─ model/                     참가자, 학칙, 난이도, 방 상태
+    ├─ network/                   한 줄 단위 메시지 검증·읽기(`LineMessages`)
+    └─ LobbyConstants, GameConstants    상수와 메시지 규약(`Protocol`)
+```
 
 ## 설계 요약
 

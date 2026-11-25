@@ -2,11 +2,11 @@ package com.jiphyeonjeon.choseongschool.server;
 
 import com.jiphyeonjeon.choseongschool.common.GameConstants.Protocol;
 import com.jiphyeonjeon.choseongschool.common.LobbyConstants;
-import com.jiphyeonjeon.choseongschool.model.Difficulty;
-import com.jiphyeonjeon.choseongschool.model.LobbySettings;
-import com.jiphyeonjeon.choseongschool.model.ParticipantInfo;
-import com.jiphyeonjeon.choseongschool.model.RoomState;
-import com.jiphyeonjeon.choseongschool.network.LineMessages;
+import com.jiphyeonjeon.choseongschool.common.model.Difficulty;
+import com.jiphyeonjeon.choseongschool.common.model.LobbySettings;
+import com.jiphyeonjeon.choseongschool.common.model.ParticipantInfo;
+import com.jiphyeonjeon.choseongschool.common.model.RoomState;
+import com.jiphyeonjeon.choseongschool.common.network.LineMessages;
 
 import java.io.*;
 import java.net.*;

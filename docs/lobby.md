@@ -13,7 +13,7 @@ Java 21, 프로젝트 루트에서 실행한다.
 .\gradlew.bat runClient
 ```
 
-`runServer`는 Spring 앱 하나로 DB와 대기실 TCP 서버를 함께 실행한다(`config.LobbyServerConfiguration`).
+`runServer`는 Spring 앱 하나로 DB와 대기실 TCP 서버를 함께 실행한다(`server.config.LobbyServerConfiguration`).
 DB 계정은 프로젝트 루트의 `application-secret.properties`(gitignore)나 환경 변수 `DB_USERNAME`, `DB_PASSWORD`로 넣는다.
 대기실 주소와 포트는 `application.properties`의 `lobby.bind-address`(기본 `0.0.0.0`, 같은 Wi-Fi의 다른 PC도 접속), `lobby.port`(기본 50024)로 바꾼다.
 Ctrl+C로 종료하면 Spring이 `LobbyServer.close()`로 소켓과 스레드를 정리한다.
@@ -39,12 +39,12 @@ client.connect(serverIp, 50024, nickname, characterIndex);
 캐릭터 번호는 세종대왕/퇴계이황/율곡이이/신사임당/이순신 순서의 0~4다. 로그인, 대기실 초상 파일(`ch번호.png`), 게임 화면 `Avatar`가 같은 번호를 쓴다. 닉네임은 1~8자이며 `|`와 제어 문자는 금지한다.
 실제 조립은 `client.ClientFlow`가 한다. `LoginController`가 검증 후 `LoginListener`로 접속 정보를 넘기면 위 순서로 대기실에 접속한다.
 대기실 `나가기`는 연결을 닫고 로그인 화면으로 돌아간다. 창 종료 시 `client.close()`를 호출하고 재접속은 새 객체로 한다.
-화면 크기는 `Theme`(현재 1200×740)을 따른다.
+화면 크기는 `client.view.Theme`(현재 1200×740)을 따른다.
 
 대기실은 MVC로 나뉜다.
-- Model `model.LobbyState`: 참가자, 반장, 내 번호, 대기·시작 중·게임 중 단계, 카운트다운 숫자, 학칙과 요청 대기 여부, 권한 판단(`canStart` 등)
-- Controller `controller.NetworkLobbyController`: 서버 메시지와 버튼 요청을 받아 상태를 바꾸고 `view.render(state)` 호출. 학칙 변경·시작은 권한 확인 후 서버로 전송
-- View `view.LobbyView`: 상태를 들고 있지 않고 `render(LobbyState)`로 그리기만 함
+- Model `client.model.LobbyState`: 참가자, 반장, 내 번호, 대기·시작 중·게임 중 단계, 카운트다운 숫자, 학칙과 요청 대기 여부, 권한 판단(`canStart` 등)
+- Controller `client.controller.NetworkLobbyController`: 서버 메시지와 버튼 요청을 받아 상태를 바꾸고 `view.render(state)` 호출. 학칙 변경·시작은 권한 확인 후 서버로 전송
+- View `client.view.LobbyView`: 상태를 들고 있지 않고 `render(LobbyState)`로 그리기만 함
 다른 화면에서 대기실 상태가 필요하면 `LobbyClient.lobbyState()`로 읽는다(Swing 스레드).
 
 ## 게임 연결
