@@ -1,5 +1,7 @@
 package com.jiphyeonjeon.choseongschool.service;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -54,5 +56,12 @@ public class WordService {
 		}
 		wordRepository.deleteById(id); //단어 삭제
 		return true; //삭제 성공시 true 리턴
+	}
+
+	//READ: 난이도에 맞는 단어를 섞어서 count개 조회.
+	public List<Word> readByLevel(String level, int count) {
+		List<Word> words = new ArrayList<>(wordRepository.findByLevel(level));	//해당 난이도 해당하는 전체 단어 목록 가져옴
+		Collections.shuffle(words);		//단어 목록을 섞음
+		return words.subList(0, Math.min(count, words.size()));		//전체 단어 목록에서 총 문제 수만큼만 뽑아서 전달
 	}
 }
