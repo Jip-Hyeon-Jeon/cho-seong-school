@@ -10,8 +10,10 @@ Java 21, 프로젝트 루트에서 실행한다.
 ```powershell
 .\gradlew.bat clean build
 .\gradlew.bat runLobbyServer --args="50024 127.0.0.1"
+.\gradlew.bat runClient
 ```
 
+클라이언트(`client.ClientMain`)는 창 하나에서 로그인 → 대기실 → 게임 화면을 차례로 보여 준다.
 서버는 Enter로 종료한다. 다른 PC를 받을 때는 서버 bind 주소를 `0.0.0.0`으로 지정한다.
 테스트는 루프백 소켓으로 정원·반장 권한과 위임·설정 검증·카운트다운 취소/재시작·게임 메시지 전달을 확인한다.
 별도 PR 소스나 미리보기 실행기는 필요하지 않다. 실제 MariaDB와 여러 PC/LAN 환경은 별도 검증 대상이다.
@@ -30,8 +32,9 @@ client.connect(serverIp, 50024, nickname, characterIndex);
 ```
 
 캐릭터 번호는 세종/사임당/율곡/퇴계/정약용 순서의 0~4다. 닉네임은 1~8자이며 `|`와 제어 문자는 금지한다.
-로그인 PR #1의 성공 콜백 연결은 남아 있다. 창 종료 시 `client.close()`를 호출하고 재접속은 새 객체로 한다.
-대기실은 공통 1600×900 안에 1200×740을 중앙 배치한다. 다른 화면과 배경·크기 통일은 후속 작업이다.
+실제 조립은 `client.ClientFlow`가 한다. `LoginController`가 검증 후 `LoginListener`로 접속 정보를 넘기면 위 순서로 대기실에 접속한다.
+대기실 `나가기`는 연결을 닫고 로그인 화면으로 돌아간다. 창 종료 시 `client.close()`를 호출하고 재접속은 새 객체로 한다.
+화면 크기는 `GameConstants.Screen`(현재 1200×740)을 따른다.
 
 ## 게임 연결
 
