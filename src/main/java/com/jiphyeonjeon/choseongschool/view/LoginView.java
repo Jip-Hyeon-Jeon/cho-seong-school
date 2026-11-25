@@ -8,15 +8,10 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 import java.awt.*;
 
-public class LoginView extends JPanel {
+import static com.jiphyeonjeon.choseongschool.common.GameConstants.Colors.*;
+import static com.jiphyeonjeon.choseongschool.common.GameConstants.Screen.*;
 
-    // 색상 팔레트 (한지 & 전통 한국풍 테마)
-    private static final Color BG_HANJI = new Color(247, 241, 227);      // 전체 한지 배경색
-    private static final Color CARD_BG = new Color(253, 250, 242);       // 카드 내부 밝은 한지색
-    private static final Color SCROLL_BG = new Color(238, 226, 200);     // 족자/상소문 배경색
-    private static final Color BROWN_DARK = new Color(78, 52, 46);       // 타이틀 배너 짙은 갈색
-    private static final Color RED_STAMP = new Color(169, 50, 38);       // 입학 버튼/낙관 붉은색
-    private static final Color BORDER_GOLD = new Color(185, 160, 120);   // 테두리 선 색
+public class LoginView extends JPanel {
 
     // Controller에서 접근할 UI 컴포넌트들
     private JTextField ipField;
@@ -256,7 +251,7 @@ public class LoginView extends JPanel {
         SwingUtilities.invokeLater(() -> {
             JFrame frame = new JFrame("초성서당 - 로그인 테스트");
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-            frame.setSize(1000, 620);
+            frame.setSize(WIDTH, HEIGHT);
             frame.setLocationRelativeTo(null);
 
             LoginView loginView = new LoginView();

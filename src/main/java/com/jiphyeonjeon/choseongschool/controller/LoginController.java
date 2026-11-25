@@ -1,7 +1,6 @@
 package com.jiphyeonjeon.choseongschool.controller;
 
 import com.jiphyeonjeon.choseongschool.view.LoginView;
-
 import javax.swing.*;
 
 public class LoginController {
@@ -9,7 +8,7 @@ public class LoginController {
     private final LoginView view;
 
     // 캐릭터 목록
-    private final String[] characters = {"세종대왕", "신사임당", "율곡이이", "퇴계이황", "정약용"};
+    private final String[] characters = {"세종대왕", "신사임당", "율곡이이", "퇴계이황", "이순신"};
     private int currentIndex = 0;
 
     public LoginController(LoginView view) {

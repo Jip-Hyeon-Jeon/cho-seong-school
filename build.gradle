@@ -30,6 +30,9 @@ dependencies {
 	
 	//MariaDB
 	runtimeOnly 'org.mariadb.jdbc:mariadb-java-client'
+
+    // 테스트용
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	
 }
 
