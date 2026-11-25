@@ -1,10 +1,10 @@
 package com.jiphyeonjeon.choseongschool.service;
 
+import com.jiphyeonjeon.choseongschool.common.GameConstants.Protocol;
 import com.jiphyeonjeon.choseongschool.entity.Word;
-import com.jiphyeonjeon.choseongschool.lobby.model.Difficulty;
-import com.jiphyeonjeon.choseongschool.lobby.model.LobbySettings;
-import com.jiphyeonjeon.choseongschool.lobby.model.ParticipantInfo;
-import com.jiphyeonjeon.choseongschool.lobby.server.GameEvents;
+import com.jiphyeonjeon.choseongschool.model.LobbySettings;
+import com.jiphyeonjeon.choseongschool.model.ParticipantInfo;
+import com.jiphyeonjeon.choseongschool.server.GameEvents;
 import com.jiphyeonjeon.choseongschool.timer.RoundTimer;
 import com.jiphyeonjeon.choseongschool.timer.TimerListener;
 import org.springframework.beans.factory.DisposableBean;
@@ -12,23 +12,25 @@ import org.springframework.stereotype.Service;
 
 import java.text.Normalizer;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 /**
- * 방(LobbyServer) 하나당 게임 한 판을 진행한다.
+ * 방(LobbyServer) 하나당 게임 한 판을 진행한다. 메시지 형식은 GameConstants.Protocol을 따른다.
  * <p>
- * 스레드 모델: 방 이벤트 스레드(onStart/onAnswer/onLeave), 라운드 타이머 스레드,
- * 다음 라운드 스케줄러 스레드가 모두 같은 상태를 건드린다. 상태 변경은 전부 this 락 안에서 하고,
- * epoch 값으로 "이미 끝난 라운드/게임"에서 늦게 도착한 콜백을 무시한다.
+ * 스레드 모델: 방 이벤트(onStart/onAnswer/onLeave)와 라운드 타이머는 할 일을 게임 스레드에 넘기기만 하고,
+ * 상태 변경과 전송은 전부 게임 스레드 하나에서 순서대로 한다.
+ * LobbyServer는 방을 잠근 채로 호출하고 broadcast도 방을 잠그므로, 여기서 따로 락을 잡으면
+ * 서로 상대의 락을 기다리며 멈출 수 있다(교착 상태). DB 조회도 게임 스레드에서 해 방을 막지 않는다.
+ * epoch 값으로 "이미 끝난 라운드/게임"에서 늦게 도착한 일을 무시한다.
  */
 @Service
 public class GameService implements GameEvents, DisposableBean {
@@ -47,16 +49,17 @@ public class GameService implements GameEvents, DisposableBean {
     }
 
     private final WordService wordService;
-    private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor(r -> {
-        Thread t = new Thread(r, "game-round-scheduler");
+    private final ScheduledExecutorService gameThread = Executors.newSingleThreadScheduledExecutor(r -> {
+        Thread t = new Thread(r, "game-service");
         t.setDaemon(true);
         return t;
     });
 
+    // 아래 상태는 모두 게임 스레드에서만 읽고 쓴다
     // 플레이어와 점수를 한 맵으로 관리 (두 맵이 어긋나는 문제 방지)
     private final Map<String, PlayerState> players = new LinkedHashMap<>();
 
-    private boolean finished;
+    private boolean finished = true;
     private LobbySettings settings;
     private List<Word> roundWords = List.of();
     private int currentRoundIndex;
@@ -64,18 +67,35 @@ public class GameService implements GameEvents, DisposableBean {
     private String currentAnswer;          // 정규화된 정답 (라운드 시작 때 한 번만 계산)
     private RoundTimer currentTimer;
     private ScheduledFuture<?> nextRoundTask;
-
-    // 타이머 스레드가 락 없이 읽으므로 volatile
-    private volatile Consumer<String> broadcast;
-    private volatile boolean roundActive;
-    private volatile long epoch;           // 라운드 시작/게임 종료/방 비움마다 증가
+    private Consumer<String> broadcast;
+    private boolean roundActive;
+    private long epoch;                    // 라운드 시작/게임 종료/방 비움마다 증가
 
     public GameService(WordService wordService) {
         this.wordService = wordService;
     }
 
+    /** 게임 스레드에 할 일을 넘긴다. 예외가 나도 게임 스레드는 계속 일한다 */
+    private void runOnGameThread(Runnable task) {
+        try {
+            gameThread.execute(() -> {
+                try {
+                    task.run();
+                } catch (RuntimeException e) {
+                    System.err.println("게임 처리 실패: " + e);
+                }
+            });
+        } catch (RejectedExecutionException e) {
+            // 서버가 종료되는 중이면 무시
+        }
+    }
+
     @Override
-    public synchronized void onStart(List<ParticipantInfo> participants, LobbySettings settings, Consumer<String> broadcast) {
+    public void onStart(List<ParticipantInfo> participants, LobbySettings settings, Consumer<String> broadcast) {
+        runOnGameThread(() -> startGame(participants, settings, broadcast));
+    }
+
+    private void startGame(List<ParticipantInfo> participants, LobbySettings settings, Consumer<String> broadcast) {
         resetRound();
         finished = false;
         this.settings = settings;
@@ -88,51 +108,23 @@ public class GameService implements GameEvents, DisposableBean {
         }
 
         // 게임당 한 번만 문제를 뽑고 첫 라운드를 시작한다
-        this.roundWords = pickWords(settings.difficulty(), settings.rounds());
+        try {
+            roundWords = wordService.readByLevel(settings.difficulty().getLabel(), settings.rounds());
+        } catch (RuntimeException e) {
+            System.err.println("문제를 가져오지 못함: " + e);
+            roundWords = List.of(); // 문제가 없으면 바로 게임을 끝내 방이 대기 상태로 돌아가게 한다
+        }
         sendScores();
         startNextRound();
     }
 
-    private List<Word> pickWords(Difficulty difficulty, int count) {
-        if (count <= 0) return List.of();
-
-        String targetLevel = toKoreanLevel(difficulty);
-        List<Word> sameLevel = new ArrayList<>();
-        List<Word> others = new ArrayList<>();
-        for (Word w : wordService.read()) {
-            (targetLevel.equals(w.getLevel()) ? sameLevel : others).add(w);
-        }
-
-        Collections.shuffle(sameLevel);
-        if (sameLevel.size() >= count) {
-            return new ArrayList<>(sameLevel.subList(0, count));
-        }
-
-        // 해당 난이도 단어를 전부 쓰고, 모자란 만큼만 다른 난이도에서 보충
-        Collections.shuffle(others);
-        List<Word> picked = new ArrayList<>(sameLevel);
-        picked.addAll(others.subList(0, Math.min(count - sameLevel.size(), others.size())));
-        Collections.shuffle(picked);
-        return picked;
-    }
-
-    private String toKoreanLevel(Difficulty difficulty) {
-        return switch (difficulty) {
-            case LOW -> "하";
-            case MEDIUM -> "중";
-            case HIGH -> "상";
-        };
-    }
-
-    /**
-     * 호출하는 쪽이 this 락을 잡고 있어야 한다.
-     */
     private void startNextRound() {
         while (currentRoundIndex < roundWords.size()) {
             Word word = roundWords.get(currentRoundIndex++);
             try {
-                // 문제 출제: ROUND|현재라운드|총라운드|초성포함예문
-                broadcast.accept("ROUND|" + currentRoundIndex + "|" + roundWords.size() + "|" + word.getExample());
+                // 라운드 번호를 먼저, 문제(초성이 포함된 예문)를 다음에 보낸다
+                send(Protocol.ROUND, currentRoundIndex, roundWords.size());
+                send(Protocol.QUESTION, word.getExample());
             } catch (RuntimeException e) {
                 // 예문이 프로토콜 검증에 걸리는 등 출제에 실패하면 그 단어만 건너뛴다
                 System.err.println("출제 실패로 건너뜀: " + e.getMessage());
@@ -143,21 +135,22 @@ public class GameService implements GameEvents, DisposableBean {
             currentAnswer = normalize(word.getWord());
             roundActive = true;
             final long roundEpoch = ++epoch;
+            final int totalSeconds = settings.seconds();
 
-            currentTimer = new RoundTimer(settings.seconds(), new TimerListener() {
+            currentTimer = new RoundTimer(totalSeconds, new TimerListener() {
                 @Override
                 public void onTick(int remainingSeconds) {
-                    sendIfCurrent(roundEpoch, "TIMER|" + remainingSeconds);
+                    runIfCurrent(roundEpoch, () -> sendQuietly(Protocol.TIME, remainingSeconds, totalSeconds));
                 }
 
                 @Override
                 public void onHintTime() {
-                    sendIfCurrent(roundEpoch, "HINT|" + word.getMeaning());
+                    runIfCurrent(roundEpoch, () -> sendQuietly(Protocol.HINT, word.getMeaning()));
                 }
 
                 @Override
                 public void onTimeOut() {
-                    handleTimeOut(roundEpoch);
+                    runIfCurrent(roundEpoch, () -> endRound());
                 }
             });
             currentTimer.start();
@@ -166,71 +159,58 @@ public class GameService implements GameEvents, DisposableBean {
         finishGame();
     }
 
-    // 플레이어 정답 & 채팅 입력
+    // 플레이어 정답 입력
     @Override
-    public synchronized void onAnswer(ParticipantInfo player, String answer, Consumer<String> unused) {
+    public void onAnswer(ParticipantInfo player, String answer, Consumer<String> unused) {
+        runOnGameThread(() -> judge(player, answer.trim()));
+    }
+
+    private void judge(ParticipantInfo player, String answer) {
         // 게임에 없는 사람(이미 나간 사람 등)의 입력은 무시
         PlayerState state = players.get(player.id());
-        if (state == null) return;
+        if (finished || state == null) return;
 
-        String cleaned = answer.trim();
-        if (roundActive && normalize(cleaned).equals(currentAnswer)) {
-            roundActive = false;
-            stopCurrentTimer();
-
+        // O는 이번 라운드의 첫 정답자뿐이다. 오답이거나 이미 끝난 라운드의 답은 X
+        boolean correct = roundActive && normalize(answer).equals(currentAnswer);
+        sendQuietly(Protocol.ANSWER, player.nickname(), answer, correct ? Protocol.CORRECT : Protocol.WRONG);
+        if (correct) {
             state.score += BASE_SCORE;
-            // 정답 알림: CORRECT|닉네임|정답단어|획득점수|누적점수
-            sendQuietly("CORRECT|" + player.nickname() + "|" + currentWord.getWord() + "|" + BASE_SCORE + "|" + state.score);
-            sendScores();
-            scheduleNextRound();
-        } else {
-            // 오답이거나 라운드 사이 대기 중인 입력은 일반 채팅으로 전달
-            sendQuietly("CHAT|" + player.nickname() + "|" + cleaned);
+            sendQuietly(Protocol.SCORE, player.nickname(), state.score);
+            endRound();
         }
     }
 
-    // 시간 초과
-    private synchronized void handleTimeOut(long roundEpoch) {
-        if (!isCurrent(roundEpoch)) return;
+    /** 정답이 나왔거나 시간이 다 됐을 때: 정답과 뜻을 공개하고 잠시 뒤 다음 라운드로 */
+    private void endRound() {
         roundActive = false;
+        stopCurrentTimer();
+        sendQuietly(Protocol.ROUND_END, currentWord.getWord(), currentWord.getMeaning());
         scheduleNextRound();
-        sendQuietly("TIMEOUT|" + currentWord.getWord());
     }
 
-    /**
-     * 현재 점수판 전송: SCORE|인원|id|점수|id|점수... 호출하는 쪽이 this 락을 잡고 있어야 한다.
-     */
+    /** 현재 점수를 한 명씩 전송 */
     private void sendScores() {
-        StringBuilder sb = new StringBuilder("SCORE|").append(players.size());
         for (PlayerState p : players.values()) {
-            sb.append('|').append(p.info.id()).append('|').append(p.score);
+            sendQuietly(Protocol.SCORE, p.info.nickname(), p.score);
         }
-        sendQuietly(sb.toString());
     }
 
-    /**
-     * 호출하는 쪽이 this 락을 잡고 있어야 한다.
-     */
     private void scheduleNextRound() {
         final long scheduledEpoch = epoch;
-        nextRoundTask = scheduler.schedule(() -> {
-            synchronized (this) {
-                // 대기 중에 새 게임이 시작되었거나 방이 비었다면 아무것도 하지 않는다
-                if (epoch != scheduledEpoch) return;
-                nextRoundTask = null;
-                try {
-                    startNextRound();
-                } catch (RuntimeException e) {
-                    System.err.println("다음 라운드 시작 실패: " + e);
-                    finishGame();
-                }
+        nextRoundTask = gameThread.schedule(() -> {
+            // 대기 중에 새 게임이 시작되었거나 방이 비었다면 아무것도 하지 않는다
+            if (epoch != scheduledEpoch) return;
+            nextRoundTask = null;
+            try {
+                startNextRound();
+            } catch (RuntimeException e) {
+                System.err.println("다음 라운드 시작 실패: " + e);
+                finishGame();
             }
         }, NEXT_ROUND_DELAY_SEC, TimeUnit.SECONDS);
     }
 
-    /**
-     * 호출하는 쪽이 this 락을 잡고 있어야 한다.
-     */
+    /** 점수 높은 순으로 최종 결과를 보낸다. LobbyServer는 GAME_END를 보고 방을 대기 상태로 되돌린다 */
     private void finishGame() {
         resetRound();
         finished = true;
@@ -238,39 +218,45 @@ public class GameService implements GameEvents, DisposableBean {
         List<PlayerState> ranking = new ArrayList<>(players.values());
         ranking.sort(Comparator.comparingInt((PlayerState p) -> p.score).reversed());
 
-        StringBuilder sb = new StringBuilder("GAME_OVER|").append(ranking.size());
+        List<Object> fields = new ArrayList<>();
         for (PlayerState p : ranking) {
-            sb.append('|').append(p.info.nickname()).append('|').append(p.score);
+            fields.add(p.info.nickname());
+            fields.add(p.score);
         }
-        sendQuietly(sb.toString());
+        sendQuietly(Protocol.GAME_END, fields.toArray());
     }
 
     @Override
-    public synchronized void onLeave(ParticipantInfo player) {
-        players.remove(player.id());
-        // 방이 비는 경우는 LobbyServer가 onRoomEmpty()를 따로 호출한다
-        if (!finished && !players.isEmpty()) sendScores();
+    public void onLeave(ParticipantInfo player) {
+        runOnGameThread(() -> {
+            players.remove(player.id());
+            // 누가 나가면 화면이 학동 줄을 다시 그리므로 남은 사람의 점수를 다시 보낸다
+            // 방이 비는 경우는 LobbyServer가 onRoomEmpty()를 따로 호출한다
+            if (!finished && !players.isEmpty()) sendScores();
+        });
     }
 
     @Override
-    public synchronized void onRoomEmpty() {
-        resetRound();
-        finished = false;
-        players.clear();
-        roundWords = List.of();
-        currentRoundIndex = 0;
-        currentWord = null;
-        currentAnswer = null;
+    public void onRoomEmpty() {
+        runOnGameThread(() -> {
+            resetRound();
+            finished = true;
+            players.clear();
+            roundWords = List.of();
+            currentRoundIndex = 0;
+            currentWord = null;
+            currentAnswer = null;
+        });
     }
 
     @Override
-    public synchronized void destroy() {
-        resetRound();
-        scheduler.shutdownNow();
+    public void destroy() {
+        runOnGameThread(this::resetRound); // 라운드 타이머 정리
+        gameThread.shutdown();
     }
 
     /**
-     * 진행 중인 라운드·타이머·예약 작업을 모두 무효화한다. 호출하는 쪽이 this 락을 잡고 있어야 한다.
+     * 진행 중인 라운드·타이머·예약 작업을 모두 무효화한다.
      */
     private void resetRound() {
         epoch++;
@@ -289,20 +275,28 @@ public class GameService implements GameEvents, DisposableBean {
         }
     }
 
-    private boolean isCurrent(long roundEpoch) {
-        return roundActive && epoch == roundEpoch;
+    /** 타이머가 부른 일을 게임 스레드로 넘기되, 그 라운드가 아직 진행 중일 때만 실행한다 */
+    private void runIfCurrent(long roundEpoch, Runnable task) {
+        runOnGameThread(() -> {
+            if (roundActive && epoch == roundEpoch) task.run();
+        });
     }
 
-    private void sendIfCurrent(long roundEpoch, String line) {
-        if (isCurrent(roundEpoch)) sendQuietly(line);
+    /** 이름|값|값... 한 줄로 만들어 보낸다 */
+    private void send(String type, Object... fields) {
+        StringBuilder line = new StringBuilder(type);
+        for (Object field : fields) {
+            line.append(Protocol.SEPARATOR).append(field);
+        }
+        broadcast.accept(line.toString());
     }
 
     /**
-     * 전송 중 예외가 타이머·방 이벤트 스레드를 죽이거나 플레이어 연결을 끊지 않도록 막는다.
+     * 전송 중 예외가 게임 스레드의 다음 작업을 막지 않도록 막는다.
      */
-    private void sendQuietly(String line) {
+    private void sendQuietly(String type, Object... fields) {
         try {
-            broadcast.accept(line);
+            send(type, fields);
         } catch (RuntimeException e) {
             System.err.println("전송 실패: " + e.getMessage());
         }
