@@ -62,7 +62,7 @@ PR #2의 컨트롤러에는 `new GameRoomController(gameView, client::send)`로 
 서버는 `LobbyServer(bindAddress, port, GameEvents)`로 게임 로직을 연결한다.
 `GameEvents` 구현체를 `@Component`로 등록하면 `runServer` 실행 시 Spring이 자동으로 주입한다. `WordService` 같은 DB Bean도 생성자로 받을 수 있다.
 `onStart`에서 출제·문제 타이머를 시작하고 `onAnswer`에서 정답을 판정한 뒤 `broadcast`로 전송한다.
-DB 조회로 방 이벤트 스레드를 막지 않는다. `onLeave`, `onRoomEmpty`와 서버 종료 시 타이머·자원을 정리한다.
+`GameEvents`는 방 상태를 잠근(synchronized) 채로 호출되므로 DB 조회 같은 긴 작업으로 오래 막지 않는다. `onLeave`, `onRoomEmpty`와 서버 종료 시 타이머·자원을 정리한다.
 게임을 끝낼 때는 `GAME_END|닉네임|점수|...`를 마지막으로 보낸다. 서버는 이 메시지를 전달한 뒤 방을 대기 상태로 되돌리고 `SETTINGS`를 다시 보낸다.
 그 뒤 같은 게임이 늦게 보내는 메시지는 무시되며, 반장은 다시 시작할 수 있고 새 학동도 입장할 수 있다.
 클라이언트는 `GAME_END`를 받으면 결과 화면을 보여 주고, `서당 마루로`는 같은 연결의 대기실로, `나가기`는 로그인 화면으로 돌아간다.
