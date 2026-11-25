@@ -10,9 +10,22 @@ import com.jiphyeonjeon.choseongschool.view.ResultView;
 public class ResultController {
 
 	private ResultView view;
+	private final Runnable waitingRoomAction;
+	private final Runnable exitAction;
 
+	/** 단독 화면 확인용: 버튼을 누르면 콘솔에 출력만 한다 */
 	public ResultController(ResultView view) {
+		this(view, () -> System.out.println("서당 마루로 이동"), () -> System.out.println("나가기"));
+	}
+
+	/**
+	 * @param waitingRoomAction "서당 마루로" 버튼: 대기실 화면으로 전환 (ClientFlow에서 연결)
+	 * @param exitAction        "나가기" 버튼: 서버 접속 종료 후 로그인 화면으로 (ClientFlow에서 연결)
+	 */
+	public ResultController(ResultView view, Runnable waitingRoomAction, Runnable exitAction) {
 		this.view = view;
+		this.waitingRoomAction = waitingRoomAction;
+		this.exitAction = exitAction;
 		initEventBindings();
 	}
 
@@ -28,12 +41,10 @@ public class ResultController {
 	}
 
 	private void onWaitingRoom() {
-		//TODO: MainFrame이 생기면 대기실 화면으로 전환
-		System.out.println("서당 마루로 이동");
+		waitingRoomAction.run();
 	}
 
 	private void onExit() {
-		//TODO: 통신이 연결되면 서버 접속 종료 처리
-		System.out.println("나가기");
+		exitAction.run();
 	}
 }

@@ -1,5 +1,6 @@
 package com.jiphyeonjeon.choseongschool.controller;
 
+import com.jiphyeonjeon.choseongschool.common.GameConstants.Protocol;
 import com.jiphyeonjeon.choseongschool.client.GameScreenListener;
 import com.jiphyeonjeon.choseongschool.common.LobbyConstants;
 import com.jiphyeonjeon.choseongschool.model.Difficulty;
@@ -132,7 +133,13 @@ public final class NetworkLobbyController {
                 // 대기실 메시지가 아니면 게임 메시지: 게임 중에만 게임 화면으로 그대로 전달
                 // (QUESTION, TIME, SCORE, GAME_END 등의 해석은 게임 화면 컨트롤러가 맡는다)
                 default -> {
-                    if (gameStarted) gameScreen.onMessage(line);
+                    if (!gameStarted) return;
+                    gameScreen.onMessage(line);
+                    if (fields[0].equals(Protocol.GAME_END)) {
+                        // 서버도 방을 대기 상태로 되돌리므로 다음 카운트다운·시작을 받을 수 있게 초기화
+                        gameStarted = false;
+                        view.showGameEnded();
+                    }
                 }
             }
         } catch (IllegalArgumentException e) {

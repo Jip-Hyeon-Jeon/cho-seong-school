@@ -341,6 +341,16 @@ public class LobbyView extends JPanel {
         exit.setEnabled(true);
     }
 
+    /** 게임이 끝나 대기 상태로 복귀: 반장은 학칙을 바꾸고 다시 시작할 수 있다 */
+    public void showGameEnded() {
+        networkCountdown.setVisible(false);
+        countdownNumber = 0;
+        startPending = false;
+        viewState = RoomState.WAITING;
+        exit.setEnabled(true);
+        refreshPermissions();
+    }
+
     @Override
     protected void paintComponent(Graphics graphics) {
         super.paintComponent(graphics);
