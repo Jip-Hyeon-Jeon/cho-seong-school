@@ -24,7 +24,7 @@ public class WordService {
 	public List<Word> readByLevel(String level, int count) {
 		List<Word> words = new ArrayList<>(wordRepository.findByLevel(level));	//해당 난이도 해당하는 전체 단어 목록 가져옴
 		Collections.shuffle(words);		//단어 목록을 섞음
-		return words.subList(0, Math.min(count, words.size()));		//전체 단어 목록에서 총 문제 수만큼만 뽑아서 전달
+		return words.subList(0, Math.min(count, words.size()));		//전체 단어 목록에서 총 문제 수만큼만 뽑아서 전달. 만약 count개가 전체 단어 목록 수보다 많을 경우 전체 단어 목록 리턴
 	}
 
 }

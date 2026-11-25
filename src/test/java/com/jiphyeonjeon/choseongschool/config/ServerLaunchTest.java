@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import com.jiphyeonjeon.choseongschool.lobby.model.Difficulty;
 import com.jiphyeonjeon.choseongschool.lobby.server.LobbyServer;
 import com.jiphyeonjeon.choseongschool.service.WordService;
 
@@ -36,7 +37,7 @@ class ServerLaunchTest {
 
 	@Test
 	void springAppStartsDbAndLobbyServerTogether() throws Exception {
-		assertEquals(0, wordService.read().size()); // DB 조회가 동작한다
+		assertEquals(0, wordService.readByLevel(Difficulty.LOW.getLabel(), 10).size()); // DB 조회가 동작한다
 		try (Socket socket = new Socket("127.0.0.1", lobbyServer.getPort())) {
 			new PrintWriter(socket.getOutputStream(), true, StandardCharsets.UTF_8).println("JOIN|지수|0");
 			BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
