@@ -31,11 +31,11 @@ public final class GameConstants {
     /** [클라이언트] 화면(윈도우) 관련 상수 */
     public static final class Screen {
 
-        /** 게임 화면 가로 크기 (px) */
-        public static final int WIDTH = 1600;
+        /** 게임 화면 가로 크기 (px, Figma 시안 기준) */
+        public static final int WIDTH = 1200;
 
-        /** 게임 화면 세로 크기 (px) */
-        public static final int HEIGHT = 900;
+        /** 게임 화면 세로 크기 (px, Figma 시안 기준) */
+        public static final int HEIGHT = 740;
 
         private Screen() {
         }
