@@ -1,12 +1,10 @@
-package com.jiphyeonjeon.choseongschool.lobby;
+package com.jiphyeonjeon.choseongschool.server;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import com.jiphyeonjeon.choseongschool.lobby.model.LobbySettings;
-import com.jiphyeonjeon.choseongschool.lobby.model.ParticipantInfo;
-import com.jiphyeonjeon.choseongschool.lobby.network.TcpConnection;
-import com.jiphyeonjeon.choseongschool.lobby.server.GameEvents;
-import com.jiphyeonjeon.choseongschool.lobby.server.LobbyServer;
+import com.jiphyeonjeon.choseongschool.model.LobbySettings;
+import com.jiphyeonjeon.choseongschool.model.ParticipantInfo;
+import com.jiphyeonjeon.choseongschool.network.TcpConnection;
 import java.net.InetAddress;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;

@@ -1,4 +1,4 @@
-package com.jiphyeonjeon.choseongschool.lobby.model;
+package com.jiphyeonjeon.choseongschool.model;
 
 import java.util.List;
 

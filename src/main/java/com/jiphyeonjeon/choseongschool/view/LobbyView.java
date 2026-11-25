@@ -1,9 +1,9 @@
-package com.jiphyeonjeon.choseongschool.lobby.view;
+package com.jiphyeonjeon.choseongschool.view;
 
-import com.jiphyeonjeon.choseongschool.lobby.model.Difficulty;
-import com.jiphyeonjeon.choseongschool.lobby.model.LobbySettings;
-import com.jiphyeonjeon.choseongschool.lobby.model.ParticipantInfo;
-import com.jiphyeonjeon.choseongschool.lobby.model.RoomState;
+import com.jiphyeonjeon.choseongschool.model.Difficulty;
+import com.jiphyeonjeon.choseongschool.model.LobbySettings;
+import com.jiphyeonjeon.choseongschool.model.ParticipantInfo;
+import com.jiphyeonjeon.choseongschool.model.RoomState;
 
 import java.awt.*;
 import java.io.IOException;

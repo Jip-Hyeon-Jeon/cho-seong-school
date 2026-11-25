@@ -252,7 +252,6 @@ public class LoginView extends JPanel {
     // 단독 화면 테스트용 main (나중에 합칠 때는 MainFrame에서 LoginView만 가져다 씀)
     public static void main(String[] args) {
 
-
         SwingUtilities.invokeLater(() -> {
             JFrame frame = new JFrame("초성서당 - 로그인 테스트");
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

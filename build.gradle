@@ -40,7 +40,7 @@ tasks.named('test') {
 
 tasks.register('runLobbyServer', JavaExec) {
 	classpath = sourceSets.main.runtimeClasspath
-	mainClass = 'com.jiphyeonjeon.choseongschool.lobby.server.LobbyServer'
+	mainClass = 'com.jiphyeonjeon.choseongschool.server.LobbyServer'
 	standardInput = System.in
 }
 

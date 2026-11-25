@@ -1,4 +1,4 @@
-package com.jiphyeonjeon.choseongschool.lobby.view;
+package com.jiphyeonjeon.choseongschool.view;
 
 import java.awt.*;
 import java.awt.event.MouseAdapter;

@@ -1,15 +1,14 @@
-package com.jiphyeonjeon.choseongschool.lobby;
-import com.jiphyeonjeon.choseongschool.lobby.model.*;
-import com.jiphyeonjeon.choseongschool.lobby.view.*;
-import com.jiphyeonjeon.choseongschool.lobby.client.*;
-import com.jiphyeonjeon.choseongschool.lobby.network.*;
-import com.jiphyeonjeon.choseongschool.lobby.server.*;
+package com.jiphyeonjeon.choseongschool.controller;
+import com.jiphyeonjeon.choseongschool.model.*;
+import com.jiphyeonjeon.choseongschool.view.*;
+import com.jiphyeonjeon.choseongschool.client.*;
+import com.jiphyeonjeon.choseongschool.network.*;
+import com.jiphyeonjeon.choseongschool.server.*;
 
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 import javax.swing.*;
-
 
 /** 실제 서버 메시지와 Swing 화면의 시작/취소/재시작을 함께 검사합니다. */
 class NetworkCountdownCheckTest {

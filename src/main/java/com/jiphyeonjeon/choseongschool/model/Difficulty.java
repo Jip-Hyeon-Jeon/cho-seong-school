@@ -1,4 +1,4 @@
-package com.jiphyeonjeon.choseongschool.lobby.model;
+package com.jiphyeonjeon.choseongschool.model;
 
 /** 하·중·상으로 제한한 난이도 선택지 */
 public enum Difficulty {

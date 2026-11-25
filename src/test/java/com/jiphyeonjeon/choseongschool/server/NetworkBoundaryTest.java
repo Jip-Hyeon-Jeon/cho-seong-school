@@ -1,4 +1,4 @@
-package com.jiphyeonjeon.choseongschool.lobby;
+package com.jiphyeonjeon.choseongschool.server;
 
 import static org.junit.jupiter.api.Assertions.*;
 import java.io.*;
@@ -10,13 +10,11 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import org.junit.jupiter.api.Test;
-import com.jiphyeonjeon.choseongschool.lobby.model.LobbyConstants;
-import com.jiphyeonjeon.choseongschool.lobby.network.LineMessages;
-import com.jiphyeonjeon.choseongschool.lobby.network.TcpConnection;
-import com.jiphyeonjeon.choseongschool.lobby.server.LobbyServer;
-import com.jiphyeonjeon.choseongschool.lobby.server.GameEvents;
-import com.jiphyeonjeon.choseongschool.lobby.model.ParticipantInfo;
-import com.jiphyeonjeon.choseongschool.lobby.model.LobbySettings;
+import com.jiphyeonjeon.choseongschool.common.LobbyConstants;
+import com.jiphyeonjeon.choseongschool.network.LineMessages;
+import com.jiphyeonjeon.choseongschool.network.TcpConnection;
+import com.jiphyeonjeon.choseongschool.model.ParticipantInfo;
+import com.jiphyeonjeon.choseongschool.model.LobbySettings;
 
 class NetworkBoundaryTest {
     @Test
