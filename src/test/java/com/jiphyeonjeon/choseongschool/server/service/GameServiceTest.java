@@ -425,10 +425,18 @@ class GameServiceTest {
             }
         };
         LobbySettings quick = settings(Difficulty.MEDIUM, 1, 1);
+        // LobbyServer처럼 방을 잠근 채로 게임 로직을 부른다
         synchronized (room) {
             game.onStart(List.of(alice), quick, lockingBroadcast);
-            Thread.sleep(200); // 게임 스레드가 방 잠금을 기다리는 동안에도
-            Thread caller = new Thread(() -> game.onAnswer(alice, "오답", lockingBroadcast));
+        }
+        // 타이머가 1초마다 방 잠금을 기다리며 보내는 동안에도, 방을 잠근 채 부르는 onAnswer가 막히지 않아야 한다
+        for (int i = 0; i < 5; i++) {
+            Thread.sleep(100);
+            Thread caller = new Thread(() -> {
+                synchronized (room) {
+                    game.onAnswer(alice, "오답", lockingBroadcast);
+                }
+            });
             caller.start();
             caller.join(1000);
             assertTrue(!caller.isAlive(), "onAnswer가 막히면 안 됨");
