@@ -39,7 +39,7 @@ client.connect(serverIp, 50024, nickname, characterIndex);
 캐릭터 번호는 세종대왕/퇴계이황/율곡이이/신사임당/이순신 순서의 0~4다. 로그인, 대기실 초상 파일(`ch번호.png`), 게임 화면 `Avatar`가 같은 번호를 쓴다. 닉네임은 1~8자이며 `|`와 제어 문자는 금지한다.
 실제 조립은 `client.ClientFlow`가 한다. `LoginController`가 검증 후 `LoginListener`로 접속 정보를 넘기면 위 순서로 대기실에 접속한다.
 대기실 `나가기`는 연결을 닫고 로그인 화면으로 돌아간다. 창 종료 시 `client.close()`를 호출하고 재접속은 새 객체로 한다.
-화면 크기는 `GameConstants.Screen`(현재 1200×740)을 따른다.
+화면 크기는 `Theme`(현재 1200×740)을 따른다.
 
 ## 게임 연결
 

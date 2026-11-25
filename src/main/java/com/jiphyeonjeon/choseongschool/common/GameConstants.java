@@ -1,44 +1,25 @@
 package com.jiphyeonjeon.choseongschool.common;
 
 /*
- * 프로젝트 전역 상수 모음 (클라이언트(Swing) + 서버(Spring Boot) 공용)
+ * 서버와 클라이언트가 함께 쓰는 상수, 서버 상수 모음
+ * 색, 글꼴, 이미지, 화면 크기 등 디자인은 Theme에 둔다.
  *
  * [사용법]
- * 1) 클래스 이름으로 접근
- *    import com.jiphyeonjeon.choseongschool.common.GameConstants;
- *    frame.setSize(GameConstants.Screen.WIDTH, GameConstants.Screen.HEIGHT);
- *
- * 2) 그룹을 import 해서 짧게 쓰기
- *    import com.jiphyeonjeon.choseongschool.common.GameConstants.Screen;
- *    frame.setSize(Screen.WIDTH, Screen.HEIGHT);
+ * import com.jiphyeonjeon.choseongschool.common.GameConstants.Protocol;
+ * String line = Protocol.HINT + Protocol.SEPARATOR + meaning;
  *
  * [상수 추가 규칙]
- * - 관련된 상수끼리 중첩 클래스(그룹)로 묶는다.
- *   예) 클라이언트: Screen, Color, Font / 서버: Api, Room / 공용: Game
- * - 그룹 주석에 [클라이언트], [서버], [공용] 중 어디서 쓰는지 표시한다.
+ * - 관련된 상수끼리 중첩 클래스(그룹)로 묶는다. 예) 공용: Protocol / 서버: Game
+ * - 그룹 주석에 [서버], [공용] 중 어디서 쓰는지 표시한다.
  * - 그룹과 상수 위에는 마우스를 올리면 팝업으로 보이도록 한 줄 Javadoc을 단다. (예: 별표 두 개 주석 + 설명)
  * - 새 그룹은 public static final class 이름 { private 이름() {} } 형태로 만든다.
  * - 상수는 public static final 로 선언하고, 이름은 대문자 + 언더스코어로 짓는다. (예: MAX_PLAYER)
  * - 코드에 숫자/문자열을 직접 쓰지 말고 여기에 추가한 뒤 사용한다.
  */
-
-/** 프로젝트 전역 상수 모음 (클라이언트 + 서버 공용) */
+/** 서버와 클라이언트 공용 상수, 서버 상수 모음 */
 public final class GameConstants {
 
     private GameConstants() {
-    }
-
-    /** [클라이언트] 화면(윈도우) 관련 상수 */
-    public static final class Screen {
-
-        /** 게임 화면 가로 크기 (px, Figma 시안 기준) */
-        public static final int WIDTH = 1200;
-
-        /** 게임 화면 세로 크기 (px, Figma 시안 기준) */
-        public static final int HEIGHT = 740;
-
-        private Screen() {
-        }
     }
 
     /** [공용] 서버-클라이언트 메시지 형식 (예: ANSWER|닉네임|단어|O) */

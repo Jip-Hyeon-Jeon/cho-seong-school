@@ -1,5 +1,6 @@
 package com.jiphyeonjeon.choseongschool.view;
 
+import com.jiphyeonjeon.choseongschool.common.Theme;
 import com.jiphyeonjeon.choseongschool.controller.LoginController;
 
 import javax.swing.*;
@@ -9,14 +10,6 @@ import javax.swing.border.LineBorder;
 import java.awt.*;
 
 public class LoginView extends JPanel {
-
-    // 색상 팔레트 (한지 & 전통 한국풍 테마)
-    private static final Color BG_HANJI = new Color(247, 241, 227);      // 전체 한지 배경색
-    private static final Color CARD_BG = new Color(253, 250, 242);       // 카드 내부 밝은 한지색
-    private static final Color SCROLL_BG = new Color(238, 226, 200);     // 족자/상소문 배경색
-    private static final Color BROWN_DARK = new Color(78, 52, 46);       // 타이틀 배너 짙은 갈색
-    private static final Color RED_STAMP = new Color(169, 50, 38);       // 입학 버튼/낙관 붉은색
-    private static final Color BORDER_GOLD = new Color(185, 160, 120);   // 테두리 선 색
 
     // Controller에서 접근할 UI 컴포넌트들
     private JTextField ipField;
@@ -31,7 +24,7 @@ public class LoginView extends JPanel {
 
     public LoginView() {
         setLayout(new BorderLayout(20, 20));
-        setBackground(BG_HANJI);
+        setBackground(Theme.BACKGROUND);
         setBorder(new EmptyBorder(30, 40, 40, 40));
 
         // 1. 상단 타이틀 영역
@@ -55,19 +48,19 @@ public class LoginView extends JPanel {
         header.setOpaque(false);
 
         JLabel titleLabel = new JLabel("초성서당", SwingConstants.CENTER);
-        titleLabel.setFont(new Font("맑은 고딕", Font.BOLD, 36));
-        titleLabel.setForeground(new Color(255, 248, 231));
+        titleLabel.setFont(Theme.batangBold(36));
+        titleLabel.setForeground(Theme.TEXT_LIGHT);
         titleLabel.setOpaque(true);
-        titleLabel.setBackground(BROWN_DARK);
+        titleLabel.setBackground(Theme.BROWN_DARK);
         titleLabel.setBorder(new CompoundBorder(
-                new LineBorder(BORDER_GOLD, 3),
+                new LineBorder(Theme.GOLD, 3),
                 new EmptyBorder(10, 50, 10, 50)
         ));
         titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         JLabel subTitleLabel = new JLabel("초성을 보고 가장 먼저 정답을 맞히는 문해력 겨루기");
-        subTitleLabel.setFont(new Font("맑은 고딕", Font.PLAIN, 14));
-        subTitleLabel.setForeground(BROWN_DARK);
+        subTitleLabel.setFont(Theme.batang(14));
+        subTitleLabel.setForeground(Theme.TEXT);
         subTitleLabel.setBorder(new EmptyBorder(10, 0, 0, 0));
         subTitleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
@@ -79,15 +72,15 @@ public class LoginView extends JPanel {
     // 왼쪽: 입학 원서 패널
     private JPanel createAdmissionPanel() {
         JPanel panel = new JPanel(new BorderLayout(10, 15));
-        panel.setBackground(CARD_BG);
+        panel.setBackground(Theme.PAPER);
         panel.setBorder(new CompoundBorder(
-                new LineBorder(BORDER_GOLD, 2),
+                new LineBorder(Theme.PAPER_BORDER, 2),
                 new EmptyBorder(25, 25, 25, 25)
         ));
 
         JLabel sectionTitle = new JLabel("입학 원서");
-        sectionTitle.setFont(new Font("맑은 고딕", Font.BOLD, 24));
-        sectionTitle.setForeground(BROWN_DARK);
+        sectionTitle.setFont(Theme.batangBold(24));
+        sectionTitle.setForeground(Theme.TEXT);
         panel.add(sectionTitle, BorderLayout.NORTH);
 
         // 입력 폼
@@ -96,15 +89,15 @@ public class LoginView extends JPanel {
         formPanel.setOpaque(false);
 
         JLabel ipLabel = new JLabel("서버 주소 (IP)");
-        ipLabel.setFont(new Font("맑은 고딕", Font.BOLD, 14));
+        ipLabel.setFont(Theme.batangBold(14));
         ipField = new JTextField("127.0.0.1");
-        ipField.setFont(new Font("맑은 고딕", Font.PLAIN, 16));
+        ipField.setFont(Theme.inputFont(16));
         ipField.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
 
         JLabel nameLabel = new JLabel("이름 (8자까지)");
-        nameLabel.setFont(new Font("맑은 고딕", Font.BOLD, 14));
+        nameLabel.setFont(Theme.batangBold(14));
         nicknameField = new JTextField();
-        nicknameField.setFont(new Font("맑은 고딕", Font.PLAIN, 16));
+        nicknameField.setFont(Theme.inputFont(16));
         nicknameField.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
 
         formPanel.add(Box.createVerticalStrut(15));
@@ -123,15 +116,15 @@ public class LoginView extends JPanel {
         bottomPanel.setOpaque(false);
 
         enterButton = new JButton("서당 입학");
-        enterButton.setFont(new Font("맑은 고딕", Font.BOLD, 18));
-        enterButton.setBackground(RED_STAMP);
-        enterButton.setForeground(Color.WHITE);
+        enterButton.setFont(Theme.batangBold(18));
+        enterButton.setBackground(Theme.RED);
+        enterButton.setForeground(Theme.TEXT_LIGHT);
         enterButton.setFocusPainted(false);
         enterButton.setPreferredSize(new Dimension(0, 48));
 
         JLabel guideLabel = new JLabel("같은 Wi-Fi에서 서버를 연 사람의 주소를 적습니다", SwingConstants.CENTER);
-        guideLabel.setFont(new Font("맑은 고딕", Font.PLAIN, 11));
-        guideLabel.setForeground(Color.GRAY);
+        guideLabel.setFont(Theme.batang(11));
+        guideLabel.setForeground(Theme.TEXT_SUB);
 
         bottomPanel.add(enterButton, BorderLayout.CENTER);
         bottomPanel.add(guideLabel, BorderLayout.SOUTH);
@@ -143,23 +136,22 @@ public class LoginView extends JPanel {
     // 가운데: 초상 고르기(캐릭터 선택) 패널
     private JPanel createCharacterPanel() {
         JPanel panel = new JPanel(new BorderLayout(10, 15));
-        panel.setBackground(SCROLL_BG);
+        panel.setBackground(Theme.SCROLL_BACKGROUND);
         panel.setBorder(new CompoundBorder(
-                new LineBorder(BROWN_DARK, 3),
+                new LineBorder(Theme.BROWN, 3),
                 new EmptyBorder(25, 20, 25, 20)
         ));
 
         JLabel sectionTitle = new JLabel("초상 고르기", SwingConstants.CENTER);
-        sectionTitle.setFont(new Font("맑은 고딕", Font.BOLD, 20));
-        sectionTitle.setForeground(BROWN_DARK);
+        sectionTitle.setFont(Theme.batangBold(20));
+        sectionTitle.setForeground(Theme.TEXT);
         panel.add(sectionTitle, BorderLayout.NORTH);
 
-        // 캐릭터 이미지 자리 (이미지 파일 넣기 전 임시 플레이스홀더)
-        charImageLabel = new JLabel("캐릭터 초상화", SwingConstants.CENTER);
-        charImageLabel.setFont(new Font("맑은 고딕", Font.BOLD, 16));
+        // 캐릭터 초상 (처음에는 0번)
+        charImageLabel = new JLabel(Theme.portraitIcon(0, Theme.PORTRAIT_SIZE_LARGE), SwingConstants.CENTER);
         charImageLabel.setOpaque(true);
-        charImageLabel.setBackground(CARD_BG);
-        charImageLabel.setBorder(new LineBorder(BORDER_GOLD, 2));
+        charImageLabel.setBackground(Theme.PAPER);
+        charImageLabel.setBorder(new LineBorder(Theme.PAPER_BORDER, 2));
         panel.add(charImageLabel, BorderLayout.CENTER);
 
         // 하단 이름 및 화살표 컨트롤
@@ -168,15 +160,15 @@ public class LoginView extends JPanel {
         controlPanel.setOpaque(false);
 
         charNameLabel = new JLabel("세종대왕", SwingConstants.CENTER);
-        charNameLabel.setFont(new Font("맑은 고딕", Font.BOLD, 20));
-        charNameLabel.setForeground(BROWN_DARK);
+        charNameLabel.setFont(Theme.batangBold(20));
+        charNameLabel.setForeground(Theme.TEXT);
         charNameLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         JPanel navPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 5));
         navPanel.setOpaque(false);
         prevCharButton = new JButton("◀");
         charIndexLabel = new JLabel("1 / 5");
-        charIndexLabel.setFont(new Font("맑은 고딕", Font.BOLD, 14));
+        charIndexLabel.setFont(Theme.batangBold(14));
         nextCharButton = new JButton("▶");
 
         navPanel.add(prevCharButton);
@@ -193,15 +185,15 @@ public class LoginView extends JPanel {
     // 오른쪽: 상소문(규칙 안내) 패널
     private JPanel createRuleScrollPanel() {
         JPanel panel = new JPanel(new BorderLayout(10, 15));
-        panel.setBackground(CARD_BG);
+        panel.setBackground(Theme.PAPER);
         panel.setBorder(new CompoundBorder(
-                new LineBorder(BORDER_GOLD, 2),
+                new LineBorder(Theme.PAPER_BORDER, 2),
                 new EmptyBorder(25, 25, 25, 25)
         ));
 
         JLabel sectionTitle = new JLabel("상소문", SwingConstants.CENTER);
-        sectionTitle.setFont(new Font("맑은 고딕", Font.BOLD, 24));
-        sectionTitle.setForeground(BROWN_DARK);
+        sectionTitle.setFont(Theme.batangBold(24));
+        sectionTitle.setForeground(Theme.TEXT);
         panel.add(sectionTitle, BorderLayout.NORTH);
 
         JTextArea ruleArea = new JTextArea(
@@ -212,9 +204,9 @@ public class LoginView extends JPanel {
                         "넷, 풀이 시간의 절반이 지나면 훈장님의 귀띔(힌트)이 열리옵니다.\n\n" +
                         "이상 네 가지를 삼가 아뢰옵니다."
         );
-        ruleArea.setFont(new Font("맑은 고딕", Font.PLAIN, 13));
-        ruleArea.setForeground(BROWN_DARK);
-        ruleArea.setBackground(CARD_BG);
+        ruleArea.setFont(Theme.batang(13));
+        ruleArea.setForeground(Theme.TEXT);
+        ruleArea.setBackground(Theme.PAPER);
         ruleArea.setLineWrap(true);
         ruleArea.setWrapStyleWord(true);
         ruleArea.setEditable(false);
@@ -246,6 +238,7 @@ public class LoginView extends JPanel {
 
     public void updateCharacterDisplay(String name, int currentIndex, int totalCount) {
         charNameLabel.setText(name);
+        charImageLabel.setIcon(Theme.portraitIcon(currentIndex, Theme.PORTRAIT_SIZE_LARGE));
         charIndexLabel.setText((currentIndex + 1) + " / " + totalCount);
     }
 
@@ -255,7 +248,7 @@ public class LoginView extends JPanel {
         SwingUtilities.invokeLater(() -> {
             JFrame frame = new JFrame("초성서당 - 로그인 테스트");
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-            frame.setSize(1000, 620);
+            frame.setSize(Theme.SCREEN_WIDTH, Theme.SCREEN_HEIGHT);
             frame.setLocationRelativeTo(null);
 
             LoginView loginView = new LoginView();

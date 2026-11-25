@@ -1,5 +1,6 @@
 package com.jiphyeonjeon.choseongschool.view;
 
+import com.jiphyeonjeon.choseongschool.common.Theme;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.awt.Color;
@@ -26,9 +27,9 @@ class GameRoomViewTest {
     @Test
     void 정답_공개는_청록색이고_다음_문제에서_먹색으로_돌아온다() {
         view.showRoundEnd("사필귀정", "모든 일은 반드시 바른 길로 돌아감");
-        assertEquals(Theme.JADE, colorOf("사필귀정"));
+        assertEquals(Theme.GREEN, colorOf("사필귀정"));
         view.showQuestion("ㅅㅍㄱㅈ");
-        assertEquals(Theme.INK, colorOf("ㅅㅍㄱㅈ"));
+        assertEquals(Theme.TEXT, colorOf("ㅅㅍㄱㅈ"));
     }
 
     @Test
