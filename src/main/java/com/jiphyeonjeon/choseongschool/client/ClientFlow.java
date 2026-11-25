@@ -22,11 +22,6 @@ import javax.swing.JOptionPane;
  */
 public final class ClientFlow {
 
-    /** 로그인 캐릭터 번호(0~4) → 게임 화면 캐릭터 그림 */
-    private static final Avatar[] AVATAR_BY_CHARACTER = {
-            Avatar.SEJONG, Avatar.SAIMDANG, Avatar.YULGOK, Avatar.TOEGYE, Avatar.CHUNGMUGONG
-    };
-
     private final ScreenHost host;
     private final int port;
     private final LoginView loginView = new LoginView();
@@ -136,7 +131,8 @@ public final class ClientFlow {
         private void showPlayers(List<ParticipantInfo> players, String hostId) {
             gameView.setPlayers(players.stream().map(ParticipantInfo::nickname).toList());
             for (ParticipantInfo player : players) {
-                gameView.setAvatar(player.nickname(), AVATAR_BY_CHARACTER[player.character()]);
+                // 로그인 캐릭터 번호와 Avatar 순서가 같다
+                gameView.setAvatar(player.nickname(), Avatar.values()[player.character()]);
                 if (player.id().equals(hostId)) {
                     gameView.setHost(player.nickname());
                 }

@@ -7,7 +7,7 @@ public interface LoginListener {
     /**
      * @param serverIp       서버 주소
      * @param nickname       닉네임 (1~8자)
-     * @param characterIndex 캐릭터 번호 0~4 (세종대왕, 신사임당, 율곡이이, 퇴계이황, 이순신 순서)
+     * @param characterIndex 캐릭터 번호 0~4 (세종대왕, 퇴계이황, 율곡이이, 신사임당, 이순신 순서)
      */
     void onLogin(String serverIp, String nickname, int characterIndex);
 }

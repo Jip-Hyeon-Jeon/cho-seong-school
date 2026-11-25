@@ -9,8 +9,8 @@ public class LoginController {
     private final LoginView view;
     private final LoginListener loginListener;
 
-    // 캐릭터 목록
-    private final String[] characters = {"세종대왕", "신사임당", "율곡이이", "퇴계이황", "이순신"};
+    // 캐릭터 목록 (번호 = 대기실 초상 파일 ch번호 = 게임 화면 Avatar 순서)
+    private final String[] characters = {"세종대왕", "퇴계이황", "율곡이이", "신사임당", "이순신"};
     private int currentIndex = 0;
 
     /** 단독 화면 테스트용: 검증 통과 시 콘솔에 출력만 한다 */

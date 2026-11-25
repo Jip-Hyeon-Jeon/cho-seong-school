@@ -53,13 +53,11 @@ public class LobbyView extends JPanel {
         setLayout(null);
         setPreferredSize(new Dimension(WIDTH, HEIGHT));
         setBackground(PAPER);
-        // 로그인 순서: 세종, 사임당, 율곡, 퇴계, 이순신.
-        // 이순신(ch4.png)은 초상 교체 PR #10 병합 후 {0, 3, 2, 1, 4}로 연결
-        int[] files = {0, 3, 2, 1};
-        for (int i = 0; i < files.length; i++) {
+        // 캐릭터 번호 = 파일 번호: 0 세종대왕, 1 퇴계이황, 2 율곡이이, 3 신사임당, 4 이순신
+        for (int i = 0; i < portraits.length; i++) {
             try {
-                var resource = LobbyView.class.getResource("/lobby/portraits/ch" + files[i] + ".png");
-                if (resource == null) throw new IOException("캐릭터 리소스 없음");
+                var resource = LobbyView.class.getResource("/lobby/portraits/ch" + i + ".png");
+                if (resource == null) continue; // 파일이 없으면 "초상 준비 중"으로 표시
                 portraits[i] = ImageIO.read(resource);
             } catch (IOException e) {
                 throw new IllegalStateException("캐릭터 리소스를 읽지 못했습니다.", e);
