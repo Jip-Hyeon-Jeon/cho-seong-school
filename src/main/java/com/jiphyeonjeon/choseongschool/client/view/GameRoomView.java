@@ -263,6 +263,14 @@ public class GameRoomView extends JPanel {
         caption.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 0));
         caption.setAlignmentY(1f);
         secondsLabel.setAlignmentY(1f);
+        // 초가 한 자리로 줄어도 "남은 시간"이 움직이지 않도록 두 자리 크기로 고정
+        secondsLabel.setText("00초");
+        Dimension secondsSize = secondsLabel.getPreferredSize();
+        secondsLabel.setText("");
+        secondsLabel.setHorizontalAlignment(SwingConstants.RIGHT);
+        secondsLabel.setMinimumSize(secondsSize);
+        secondsLabel.setPreferredSize(secondsSize);
+        secondsLabel.setMaximumSize(secondsSize);
 
         JPanel seconds = transparent(null);
         seconds.setLayout(new BoxLayout(seconds, BoxLayout.X_AXIS));
