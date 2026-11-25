@@ -65,10 +65,19 @@ public class GameRoomController {
     /** 메시지 한 줄 → 화면 변경. 칸이 모자라거나 모르는 메시지면 null */
     private Runnable toViewUpdate(String[] p) {
         return switch (p[0]) {
-            case Protocol.QUESTION -> p.length < 2 ? null : () -> view.showQuestion(p[1]);
+            case Protocol.QUESTION -> p.length < 2 ? null : () -> {
+                view.showQuestion(p[1]);
+                view.setInputEnabled(true); // 새 문제가 오면 다시 답을 받는다
+            };
             case Protocol.HINT -> p.length < 2 ? null : () -> view.showHint(p[1]);
-            case Protocol.ANSWER -> p.length < 4 ? null
-                    : () -> view.showBubble(p[1], p[2], Protocol.CORRECT.equals(p[3]));
+            case Protocol.ANSWER -> p.length < 4 ? null : () -> {
+                boolean correct = Protocol.CORRECT.equals(p[3]);
+                view.showBubble(p[1], p[2], correct);
+                if (correct) { // O는 첫 정답자뿐이므로 이번 라운드는 끝난 것
+                    view.jump(p[1]);
+                    view.setInputEnabled(false);
+                }
+            };
             case Protocol.TIME -> {
                 if (p.length < 3) {
                     yield null;
@@ -92,10 +101,16 @@ public class GameRoomController {
                 int total = Integer.parseInt(p[2]);
                 yield () -> view.setRound(round, total);
             }
-            case Protocol.ROUND_END -> p.length < 3 ? null : () -> view.showRoundEnd(p[1], p[2]);
+            case Protocol.ROUND_END -> p.length < 3 ? null : () -> {
+                view.showRoundEnd(p[1], p[2]);
+                view.setInputEnabled(false); // 뜻풀이 쉬는 시간
+            };
             case Protocol.GAME_END -> {
                 List<FinalScore> scores = finalScores(p);
-                yield scores == null ? null : () -> gameEndListener.accept(scores);
+                yield scores == null ? null : () -> {
+                    view.setInputEnabled(false);
+                    gameEndListener.accept(scores);
+                };
             }
             default -> null; // 다른 담당자의 메시지는 무시
         };
