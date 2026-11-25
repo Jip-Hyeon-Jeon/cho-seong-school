@@ -1,5 +1,6 @@
 package com.jiphyeonjeon.choseongschool.lobby.server;
 
+import com.jiphyeonjeon.choseongschool.common.GameConstants.Protocol;
 import com.jiphyeonjeon.choseongschool.lobby.model.Difficulty;
 import com.jiphyeonjeon.choseongschool.lobby.network.LineMessages;
 import com.jiphyeonjeon.choseongschool.lobby.model.LobbyConstants;
@@ -180,10 +181,21 @@ public final class LobbyServer implements AutoCloseable {
             try {
                 roomEvents.execute(() -> {
                     // 다른 스레드의 전송 요청 처리 및 이전 게임의 늦은 콜백 제외
-                    if (state == RoomState.PLAYING && countdownId == gameId) broadcast(line);
+                    if (state != RoomState.PLAYING || countdownId != gameId) return;
+                    broadcast(line);
+                    if (line.equals(Protocol.GAME_END) || line.startsWith(Protocol.GAME_END + Protocol.SEPARATOR)) {
+                        endGame();
+                    }
                 });
             } catch (RejectedExecutionException ignored) { }
         };
+    }
+
+    /** 게임 로직이 GAME_END를 보내면 방을 대기 상태로 되돌려 다시 시작·입장할 수 있게 한다 */
+    private void endGame() {
+        state = RoomState.WAITING;
+        countdownId++; // 끝난 게임이 늦게 보내는 메시지는 무시
+        for (Session member : members.values()) member.send("SETTINGS|" + settings.fields());
     }
 
     private void tick(long id, int number) {
