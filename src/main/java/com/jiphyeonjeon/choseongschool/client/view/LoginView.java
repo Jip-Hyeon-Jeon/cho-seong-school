@@ -98,7 +98,7 @@ public class LoginView extends JPanel {
     private static JTextField inputField(String text) {
         JTextField field = new JTextField(text);
         field.setOpaque(false);
-        field.setFont(Theme.inputFont(18));
+        field.setFont(Theme.batang(18));
         field.setForeground(Theme.TEXT);
         field.setCaretColor(Theme.TEXT);
         field.setBorder(new CompoundBorder(
@@ -109,7 +109,7 @@ public class LoginView extends JPanel {
     }
 
     private static JButton arrowButton(String text, String description) {
-        JButton button = new RoundButton(text, Theme.inputFont(14), Theme.PAPER, Theme.BROWN, Theme.BROWN, 20);
+        JButton button = new RoundButton(text, Theme.symbolFont(14), Theme.PAPER, Theme.BROWN, Theme.BROWN, 20);
         button.setToolTipText(description);
         return button;
     }
