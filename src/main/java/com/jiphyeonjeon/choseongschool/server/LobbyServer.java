@@ -1,31 +1,33 @@
 package com.jiphyeonjeon.choseongschool.server;
 
-import com.jiphyeonjeon.choseongschool.model.Difficulty;
-import com.jiphyeonjeon.choseongschool.network.LineMessages;
 import com.jiphyeonjeon.choseongschool.common.LobbyConstants;
+import com.jiphyeonjeon.choseongschool.model.Difficulty;
 import com.jiphyeonjeon.choseongschool.model.LobbySettings;
 import com.jiphyeonjeon.choseongschool.model.ParticipantInfo;
 import com.jiphyeonjeon.choseongschool.model.RoomState;
+import com.jiphyeonjeon.choseongschool.network.LineMessages;
 
 import java.io.*;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.function.Consumer;
 
-/** 입장·퇴장, 학칙, 시작 카운트다운을 공유하는 TCP 서버 */
+/**
+ * 입장·퇴장, 학칙, 시작 카운트다운을 공유하는 TCP 서버.
+ * 10주차 채팅 서버처럼 접속마다 Thread 하나를 만들고,
+ * 모두가 함께 쓰는 방 상태는 synchronized로 한 번에 한 Thread만 바꾼다.
+ */
 public final class LobbyServer implements AutoCloseable {
     private final ServerSocket listener;
-    // 동시 변경 충돌을 방지하기 위한 방 상태 변경의 순차 처리
-    private final ScheduledExecutorService roomEvents = Executors.newSingleThreadScheduledExecutor();
-    private final Map<Integer, Session> members = new LinkedHashMap<>();
-    private final Set<Socket> sockets = ConcurrentHashMap.newKeySet();
-    private final Thread acceptThread;
+    private final List<Socket> sockets = new CopyOnWriteArrayList<>();
+    private final Map<Integer, Session> members = new LinkedHashMap<>(); // 입장 순서 유지: 첫 번째가 반장
     private volatile boolean running = true;
     private int nextId = 1;
     private LobbySettings settings = LobbySettings.DEFAULT;
     private RoomState state = RoomState.WAITING;
-    private long countdownId;
+    private long countdownId; // 취소된 카운트다운과 이전 게임의 늦은 전송을 구분
     private final GameEvents gameEvents;
 
     public LobbyServer(int port) throws IOException {
@@ -36,9 +38,9 @@ public final class LobbyServer implements AutoCloseable {
         this.gameEvents = gameEvents;
         listener = new ServerSocket();
         listener.bind(new InetSocketAddress(bindAddress, port));
-        acceptThread = new Thread(this::acceptLoop, "lobby-accept");
-        acceptThread.setDaemon(true);
-        acceptThread.start();
+        Thread accept = new Thread(this::acceptLoop, "lobby-accept");
+        accept.setDaemon(true);
+        accept.start();
     }
 
     public int getPort() { return listener.getLocalPort(); }
@@ -48,55 +50,38 @@ public final class LobbyServer implements AutoCloseable {
             try {
                 Socket socket = listener.accept();
                 sockets.add(socket);
-                if (!running) { socket.close(); break; }
-                Thread handler = new Thread(() -> handle(socket), "lobby-client");
-                handler.setDaemon(true);
-                handler.start();
+                Thread client = new Thread(() -> handle(socket), "lobby-client");
+                client.setDaemon(true);
+                client.start();
             } catch (IOException e) {
                 if (running) System.err.println(e.getMessage());
             }
         }
     }
 
+    /** 클라이언트 한 명을 맡는 Thread. 연결이 끊기면 정상 퇴장과 같게 처리한다. */
     private void handle(Socket socket) {
         Session session = null;
+        boolean joined = false;
         try {
-            socket.setSoTimeout(LobbyConstants.JOIN_TIMEOUT_MS);
             BufferedReader input = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
             session = new Session(socket);
-            String firstLine = LineMessages.read(input);
-            Session current = session;
-            boolean joined = roomEvents.submit(() -> join(current, firstLine)).get();
-            if (!joined) return;
-            socket.setSoTimeout(0);
+            joined = join(session, LineMessages.read(input));
             String line;
-            while ((line = LineMessages.read(input)) != null) {
+            while (joined && (line = LineMessages.read(input)) != null) {
                 if (line.equals("QUIT")) break;
-                String command = line;
-                // 방 이벤트 큐의 무제한 누적을 방지하기 위한 이전 명령 처리 대기
-                roomEvents.submit(() -> processCommand(current, command)).get();
+                processCommand(session, line);
             }
-        } catch (IOException | ExecutionException e) {
-            // finally에서 정상 퇴장과 갑작스러운 연결 종료를 함께 처리
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        } catch (RejectedExecutionException e) {
-            // 서버 종료 중 새 작업이 들어온 경우
+        } catch (IOException e) {
+            // 연결 끊김과 너무 긴 줄은 아래 finally에서 퇴장으로 처리
         } finally {
-            Session departed = session;
-            if (departed != null) {
-                try { roomEvents.execute(() -> leave(departed)); }
-                catch (RejectedExecutionException ignored) { }
-                departed.finish();
-            } else {
-                try { socket.close(); } catch (IOException ignored) { }
-                sockets.remove(socket);
-            }
+            if (joined) leave(session);
+            try { socket.close(); } catch (IOException ignored) { }
+            sockets.remove(socket);
         }
     }
 
-    // 방 상태 접근을 roomEvents 스레드로 제한
-    private boolean join(Session session, String line) {
+    private synchronized boolean join(Session session, String line) {
         String[] parts = line == null ? new String[0] : line.split("\\|", -1);
         if (parts.length != 3 || !parts[0].equals("JOIN")) return reject(session, "BAD_JOIN");
         String nickname = parts[1].trim();
@@ -119,15 +104,12 @@ public final class LobbyServer implements AutoCloseable {
         return true;
     }
 
-    private void processCommand(Session session, String line) {
+    private synchronized void processCommand(Session session, String line) {
         if (!members.containsKey(session.id)) return;
         if (line.equals("START")) {
-            if (session.id != members.keySet().iterator().next()) commandError(session, "NOT_HOST");
+            if (!isHost(session)) commandError(session, "NOT_HOST");
             else if (state != RoomState.WAITING) commandError(session, "NOT_WAITING");
-            else {
-                state = RoomState.STARTING;
-                tick(++countdownId, 3);
-            }
+            else startCountdown();
             return;
         }
         String[] fields = line.split("\\|", -1);
@@ -142,16 +124,15 @@ public final class LobbyServer implements AutoCloseable {
         String error = null;
         if (!fields[0].equals("SET_SETTINGS")) {
             error = "UNSUPPORTED_COMMAND";
-        } else if (session.id != members.keySet().iterator().next()) {
+        } else if (!isHost(session)) {
             error = "NOT_HOST";
         } else if (state != RoomState.WAITING) {
             error = "NOT_WAITING";
         } else {
             try {
                 if (fields.length != 4) throw new IllegalArgumentException();
-                LobbySettings proposed = new LobbySettings(Difficulty.valueOf(fields[1]),
-                        Integer.parseInt(fields[2]), Integer.parseInt(fields[3]));
-                settings = proposed; // 세 값의 검증 완료 후 일괄 적용
+                settings = new LobbySettings(Difficulty.valueOf(fields[1]),
+                        Integer.parseInt(fields[2]), Integer.parseInt(fields[3])); // 세 값 검증 후 일괄 적용
             } catch (IllegalArgumentException e) {
                 error = "BAD_SETTINGS";
             }
@@ -163,40 +144,13 @@ public final class LobbyServer implements AutoCloseable {
         for (Session member : members.values()) member.send("SETTINGS|" + settings.fields());
     }
 
+    private boolean isHost(Session session) {
+        return session.id == members.keySet().iterator().next();
+    }
+
     private void commandError(Session session, String error) {
         session.send("ERROR|" + error);
         session.send("SETTINGS|" + settings.fields());
-    }
-
-    private void broadcast(String line) {
-        LineMessages.validate(line);
-        for (Session member : members.values()) member.send(line);
-    }
-
-    private java.util.function.Consumer<String> gameBroadcast(long gameId) {
-        return line -> {
-            LineMessages.validate(line);
-            if (!running) return;
-            try {
-                roomEvents.execute(() -> {
-                    // 다른 스레드의 전송 요청 처리 및 이전 게임의 늦은 콜백 제외
-                    if (state == RoomState.PLAYING && countdownId == gameId) broadcast(line);
-                });
-            } catch (RejectedExecutionException ignored) { }
-        };
-    }
-
-    private void tick(long id, int number) {
-        // 시작 번호를 비교해 취소된 예약 작업이 새 카운트다운에 섞이는 상황 방지
-        if (!running || state != RoomState.STARTING || countdownId != id) return;
-        if (number == 0) {
-            state = RoomState.PLAYING;
-            broadcast("GAME_START");
-            if (gameEvents != null) gameEvents.onStart(members.values().stream().map(Session::info).toList(), settings, gameBroadcast(countdownId));
-            return;
-        }
-        broadcast("COUNTDOWN|" + number);
-        roomEvents.schedule(() -> tick(id, number - 1), 1, TimeUnit.SECONDS);
     }
 
     private boolean reject(Session session, String reason) {
@@ -204,21 +158,70 @@ public final class LobbyServer implements AutoCloseable {
         return false;
     }
 
-    private void leave(Session session) {
-        if (members.remove(session.id) != null) {
-            if (state == RoomState.PLAYING && gameEvents != null) gameEvents.onLeave(session.info());
-            boolean cancel = state == RoomState.STARTING;
-            if (cancel || members.isEmpty()) {
-                countdownId++;
-                state = RoomState.WAITING;
+    /** 3 → 2 → 1을 1초 간격으로 알리고 게임을 시작한다. 중간에 취소되면 번호가 달라 멈춘다. */
+    private void startCountdown() {
+        state = RoomState.STARTING;
+        long id = ++countdownId;
+        Thread countdown = new Thread(() -> runCountdown(id), "lobby-countdown");
+        countdown.setDaemon(true);
+        countdown.start();
+    }
+
+    private void runCountdown(long id) {
+        for (int number = 3; number >= 1; number--) {
+            synchronized (this) {
+                if (!isCountingDown(id)) return;
+                broadcast("COUNTDOWN|" + number);
             }
-            if (members.isEmpty()) {
-                settings = LobbySettings.DEFAULT;
-                if (gameEvents != null) gameEvents.onRoomEmpty();
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                return;
             }
-            broadcastPlayers();
-            if (cancel) broadcast("START_CANCELLED|PLAYER_LEFT");
         }
+        synchronized (this) {
+            if (!isCountingDown(id)) return;
+            state = RoomState.PLAYING;
+            broadcast("GAME_START");
+            if (gameEvents != null) {
+                gameEvents.onStart(members.values().stream().map(Session::info).toList(), settings, gameBroadcast(id));
+            }
+        }
+    }
+
+    private boolean isCountingDown(long id) {
+        return running && state == RoomState.STARTING && countdownId == id;
+    }
+
+    /** 게임 로직이 방 전체에 보내는 통로. 이전 게임의 늦은 전송은 버린다. */
+    private Consumer<String> gameBroadcast(long gameId) {
+        return line -> {
+            LineMessages.validate(line);
+            synchronized (this) {
+                if (running && state == RoomState.PLAYING && countdownId == gameId) broadcast(line);
+            }
+        };
+    }
+
+    private void broadcast(String line) {
+        LineMessages.validate(line);
+        for (Session member : members.values()) member.send(line);
+    }
+
+    private synchronized void leave(Session session) {
+        if (members.remove(session.id) == null) return;
+        if (state == RoomState.PLAYING && gameEvents != null) gameEvents.onLeave(session.info());
+        boolean cancel = state == RoomState.STARTING;
+        if (cancel || members.isEmpty()) {
+            countdownId++;
+            state = RoomState.WAITING;
+        }
+        if (members.isEmpty()) {
+            settings = LobbySettings.DEFAULT;
+            if (gameEvents != null) gameEvents.onRoomEmpty();
+        }
+        broadcastPlayers();
+        if (cancel) broadcast("START_CANCELLED|PLAYER_LEFT");
     }
 
     private void broadcastPlayers() {
@@ -231,57 +234,20 @@ public final class LobbyServer implements AutoCloseable {
         for (Session member : members.values()) member.send(line.toString());
     }
 
-    private class Session {
-        private final Socket socket;
+    /** 접속자 한 명의 정보와 보내기용 PrintWriter */
+    private static class Session {
         private final PrintWriter output;
         private int id;
         private String nickname;
         private String character;
-        private final BlockingQueue<String> outgoing = new ArrayBlockingQueue<>(LobbyConstants.SEND_QUEUE_CAPACITY);
-        private final String end = new String("END"); // 참조로 비교하는 내부 종료 표시
 
         Session(Socket socket) throws IOException {
-            this.socket = socket;
-            output = new PrintWriter(socket.getOutputStream(), true, StandardCharsets.UTF_8);
-            Thread writer = new Thread(this::writeLoop, "lobby-writer");
-            writer.setDaemon(true);
-            writer.start();
+            output = new PrintWriter(new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8), true);
         }
 
         ParticipantInfo info() { return new ParticipantInfo(Integer.toString(id), nickname, Integer.parseInt(character)); }
 
-        void send(String line) {
-            if (!outgoing.offer(line)) closeSocket();
-        }
-
-        void finish() {
-            if (!outgoing.offer(end)) closeSocket();
-        }
-
-        private void writeLoop() {
-            try {
-                while (true) {
-                    String line = outgoing.take();
-                    if (line == end) break;
-                    var deadline = roomEvents.schedule(this::closeSocket, LobbyConstants.WRITE_TIMEOUT_MS, TimeUnit.MILLISECONDS);
-                    try {
-                        output.println(line);
-                        if (output.checkError()) break;
-                    } finally { deadline.cancel(false); }
-                }
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            } catch (RejectedExecutionException ignored) {
-                // 서버 종료 중 새 송신 중단
-            } finally { closeSocket(); }
-        }
-
-        private void closeSocket() {
-            try { socket.close(); } catch (IOException ignored) { }
-            sockets.remove(socket);
-            // 연결 종료나 송신 실패 시 대기 중인 writer 종료
-            if (outgoing.isEmpty()) outgoing.offer(end);
-        }
+        void send(String line) { output.println(line); }
     }
 
     @Override
@@ -289,7 +255,6 @@ public final class LobbyServer implements AutoCloseable {
         running = false;
         listener.close();
         for (Socket socket : sockets) socket.close();
-        roomEvents.shutdownNow();
     }
 
     public static void main(String[] args) throws Exception {
