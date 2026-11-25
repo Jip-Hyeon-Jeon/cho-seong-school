@@ -56,8 +56,6 @@ public final class Theme {
     public static final Color PAPER = new Color(0xFBF6EA);
     /** 종이 테두리, 구분선 */
     public static final Color PAPER_BORDER = new Color(0xC9B58E);
-    /** 로그인 초상 족자 배경 */
-    public static final Color SCROLL_BACKGROUND = new Color(0xEEE2C8);
     /** 로비 돗자리 */
     public static final Color MAT = new Color(0xE7D4A2);
     /** 결과 화면 장원 배경 */
@@ -104,6 +102,20 @@ public final class Theme {
     public static final Color FLOOR_LINE = new Color(0x5A3B22);
     /** 향 */
     public static final Color INCENSE = new Color(0xA8743F);
+
+    // ---- 색: 지폐, 동전 (캐릭터 번호 순) ----
+    private static final Color[] MONEY_COLORS = {
+            new Color(0x4F8A55), // 0 세종: 만 원 녹색
+            new Color(0x4F78B0), // 1 퇴계: 천 원 파랑
+            new Color(0xBE6A4A), // 2 율곡: 오천 원 주황
+            new Color(0xE0A92E), // 3 사임당: 오만 원 노랑
+            new Color(0x9A9C98)  // 4 이순신: 백 원 은색
+    };
+
+    /** 캐릭터 번호(0~4)의 인물이 그려진 지폐, 동전의 색 */
+    public static Color moneyColor(int character) {
+        return MONEY_COLORS[character];
+    }
 
     // ---- 색: 반투명 ----
     /** 카운트다운 때 화면을 덮는 어두운 막 */
