@@ -1,6 +1,6 @@
 package com.jiphyeonjeon.choseongschool.view;
 
-import com.jiphyeonjeon.choseongschool.common.GameConstants.Screen;
+import com.jiphyeonjeon.choseongschool.common.Theme;
 import java.awt.BasicStroke;
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -43,13 +43,13 @@ public class GameRoomView extends JPanel {
     /** 귀띔 상자(약 1100px) 안에서 뜻이 한 줄에 쓸 수 있는 폭 */
     private static final int HINT_MAX_WIDTH = 1000;
 
-    private final JLabel roundLabel = label("제 1 강", Theme.brush(42), Theme.INK);
-    private final JLabel roundInfoLabel = label(" ", Theme.batang(12), Theme.WOOD_TEXT);
-    private final JLabel questionLabel = label(" ", Theme.hahmlet(QUESTION_FONT_SIZE), Theme.INK);
+    private final JLabel roundLabel = label("제 1 강", Theme.roundFont(42), Theme.TEXT);
+    private final JLabel roundInfoLabel = label(" ", Theme.batang(12), Theme.BROWN_DARK);
+    private final JLabel questionLabel = label(" ", Theme.questionFont(QUESTION_FONT_SIZE), Theme.TEXT);
     private final IncenseTimer incense = new IncenseTimer();
-    private final JLabel secondsLabel = label("", Theme.hahmlet(40), Theme.SEAL);
+    private final JLabel secondsLabel = label("", Theme.questionFont(40), Theme.RED);
     private final RoundBox hintSeal = seal("훈장님 귀띔", 14, 4, 12, 5);
-    private final JLabel meaningLabel = label(" ", Theme.batangBold(24), Theme.INK);
+    private final JLabel meaningLabel = label(" ", Theme.batangBold(24), Theme.TEXT);
     private final JTextField inputField = new JTextField();
     private final JButton sendButton = new SealButton("제출");
     private final JPanel seatRow = new JPanel(new FlowLayout(FlowLayout.CENTER, 34, 0));
@@ -60,8 +60,8 @@ public class GameRoomView extends JPanel {
 
     public GameRoomView() {
         setLayout(new BorderLayout());
-        setBackground(Theme.PAPER_BG);
-        setPreferredSize(new Dimension(Screen.WIDTH, Screen.HEIGHT));
+        setBackground(Theme.BACKGROUND);
+        setPreferredSize(new Dimension(Theme.SCREEN_WIDTH, Theme.SCREEN_HEIGHT));
         // 기둥(24) · 단청(18) · 마루(24) 안쪽에 내용
         setBorder(BorderFactory.createEmptyBorder(30, 48, 34, 48));
 
@@ -137,13 +137,13 @@ public class GameRoomView extends JPanel {
 
     /** 라운드 종료: 두루마리에 정답을 청록색으로 띄우고 귀띔 자리에 뜻풀이를 보여준다. 다음 showQuestion에서 원래대로 돌아간다 */
     public void showRoundEnd(String answer, String meaning) {
-        setScrollText(answer, Theme.JADE);
+        setScrollText(answer, Theme.GREEN);
         showHint(meaning);
     }
 
     /** 새 문제 (초성이 섞인 문장). 힌트와 말풍선은 비운다 */
     public void showQuestion(String question) {
-        setScrollText(question, Theme.INK);
+        setScrollText(question, Theme.TEXT);
         showHint("");
         for (Seat seat : seats.values()) {
             seat.setBubble("", null);
@@ -152,7 +152,7 @@ public class GameRoomView extends JPanel {
 
     /** 두루마리 글자. 높이가 고정이라 줄을 바꾸지 않고, 길면 한 줄에 들어가게 글씨를 줄인다 */
     private void setScrollText(String text, Color color) {
-        Font font = Theme.hahmlet(QUESTION_FONT_SIZE);
+        Font font = Theme.questionFont(QUESTION_FONT_SIZE);
         int width = questionLabel.getFontMetrics(font).stringWidth(text);
         if (width > QUESTION_MAX_WIDTH) {
             font = font.deriveFont(QUESTION_FONT_SIZE * QUESTION_MAX_WIDTH / width);
@@ -193,7 +193,7 @@ public class GameRoomView extends JPanel {
     public void showBubble(String nickname, String word, boolean correct) {
         Seat seat = seats.get(nickname);
         if (seat != null) {
-            seat.setBubble(word + (correct ? " V" : " X"), correct ? Theme.JADE : Theme.SEAL);
+            seat.setBubble(word + (correct ? " V" : " X"), correct ? Theme.GREEN : Theme.RED);
         }
     }
 
@@ -215,7 +215,7 @@ public class GameRoomView extends JPanel {
 
     /** 강 팻말 + 문제 두루마리 */
     private JComponent top() {
-        RoundBox plaque = new RoundBox(Theme.WOOD, Theme.WOOD_DARK, 2, 8);
+        RoundBox plaque = new RoundBox(Theme.BROWN_LIGHT, Theme.BROWN, 2, 8);
         plaque.setLayout(new BoxLayout(plaque, BoxLayout.Y_AXIS));
         plaque.setPreferredSize(new Dimension(156, 92));
         plaque.add(Box.createVerticalGlue());
@@ -228,7 +228,7 @@ public class GameRoomView extends JPanel {
             protected void paintComponent(Graphics g) {
                 g.setColor(Theme.PAPER);
                 g.fillRect(0, 0, getWidth(), getHeight());
-                g.setColor(Theme.PAPER_LINE);
+                g.setColor(Theme.PAPER_BORDER);
                 g.fillRect(0, 0, getWidth(), 2);
                 g.fillRect(0, getHeight() - 2, getWidth(), 2);
             }
@@ -260,7 +260,7 @@ public class GameRoomView extends JPanel {
 
     /** 향로 + 타는 향 + 남은 시간 */
     private JComponent timer() {
-        JLabel caption = label("남은 시간", Theme.batang(14), Theme.INK_SOFT);
+        JLabel caption = label("남은 시간", Theme.batang(14), Theme.TEXT_SUB);
         caption.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 0));
         caption.setAlignmentY(1f);
         secondsLabel.setAlignmentY(1f);
@@ -281,7 +281,7 @@ public class GameRoomView extends JPanel {
 
     /** 훈장님 귀띔 (힌트) 상자 */
     private JComponent hint() {
-        RoundBox box = new RoundBox(Theme.PAPER, Theme.PAPER_LINE, 2, 8);
+        RoundBox box = new RoundBox(Theme.PAPER, Theme.PAPER_BORDER, 2, 8);
         box.setLayout(new GridBagLayout());
         GridBagConstraints c = new GridBagConstraints();
         c.gridx = 0;
@@ -289,19 +289,19 @@ public class GameRoomView extends JPanel {
         box.add(hintSeal, c);
         box.add(meaningLabel, c);
         c.insets = new Insets(0, 0, 0, 0);
-        box.add(label("가장 먼저 올린 한 명만 엽전을 얻습니다", Theme.batang(14), Theme.INK_SOFT), c);
+        box.add(label("가장 먼저 올린 한 명만 엽전을 얻습니다", Theme.batang(14), Theme.TEXT_SUB), c);
         return box;
     }
 
     /** 붓 + 답안지 + 제출 */
     private JComponent inputRow() {
-        inputField.setFont(Theme.input(19));
-        inputField.setForeground(Theme.INK);
-        inputField.setCaretColor(Theme.INK);
+        inputField.setFont(Theme.inputFont(19));
+        inputField.setForeground(Theme.TEXT);
+        inputField.setCaretColor(Theme.TEXT);
         inputField.setOpaque(false);
         inputField.setBorder(BorderFactory.createEmptyBorder(0, 16, 0, 16));
 
-        RoundBox answerSheet = new RoundBox(Theme.PAPER, Theme.INK, 2, 8);
+        RoundBox answerSheet = new RoundBox(Theme.PAPER, Theme.TEXT, 2, 8);
         answerSheet.setLayout(new BorderLayout());
         answerSheet.add(inputField);
 
@@ -333,10 +333,10 @@ public class GameRoomView extends JPanel {
         for (int x : new int[] {0, w - 24}) {
             g2.setColor(Theme.PILLAR);
             g2.fillRect(x, 18, 24, floorY - 18);
-            g2.setColor(Theme.SEAL_LINE);
+            g2.setColor(Theme.RED_DARK);
             g2.setStroke(new BasicStroke(2));
             g2.drawRect(x + 1, 19, 22, floorY - 20);
-            g2.setColor(Theme.JADE); // 주두
+            g2.setColor(Theme.GREEN); // 주두
             g2.fillRect(x - 4, 18, 32, 10);
             g2.setColor(Theme.STONE); // 주춧돌
             g2.fillRoundRect(x - 6, floorY - 10, 36, 12, 6, 6);
@@ -360,11 +360,11 @@ public class GameRoomView extends JPanel {
         /** 애니메이션 한 프레임 간격(ms, 약 60fps) */
         private static final int FRAME_MILLIS = 16;
 
-        private final RoundBox bubble = new RoundBox(Theme.PAPER, Theme.PAPER_LINE, 1.5f, 20);
-        private final JLabel bubbleLabel = label("", Theme.batangBold(15), Theme.INK);
+        private final RoundBox bubble = new RoundBox(Theme.PAPER, Theme.PAPER_BORDER, 1.5f, 20);
+        private final JLabel bubbleLabel = label("", Theme.batangBold(15), Theme.TEXT);
         private final JLabel avatarLabel;
         private final RoundBox hostSeal = seal("방장", 12, 2, 8, 3);
-        private final JLabel scoreLabel = label("0점", Theme.batangBold(16), Theme.SCORE);
+        private final JLabel scoreLabel = label("0점", Theme.batangBold(16), Theme.TEXT_SCORE);
 
         Seat(String nickname, Avatar avatar) {
             setOpaque(false);
@@ -379,12 +379,12 @@ public class GameRoomView extends JPanel {
             avatarLabel = new JLabel(Theme.icon(avatar.imageName()));
             setLift(0);
 
-            RoundBox nameplate = new RoundBox(Theme.WOOD, Theme.WOOD_DARK, 2, 8);
+            RoundBox nameplate = new RoundBox(Theme.BROWN_LIGHT, Theme.BROWN, 2, 8);
             nameplate.setLayout(new FlowLayout(FlowLayout.CENTER, 6, 0));
             nameplate.setBorder(BorderFactory.createEmptyBorder(4, 6, 5, 6));
             hostSeal.setVisible(false);
             nameplate.add(hostSeal);
-            nameplate.add(label(nickname, Theme.batangBold(17), Theme.INK));
+            nameplate.add(label(nickname, Theme.batangBold(17), Theme.TEXT));
 
             JPanel score = transparent(new FlowLayout(FlowLayout.CENTER, 5, 0));
             score.add(new JLabel(Theme.icon("coin")));
@@ -428,7 +428,7 @@ public class GameRoomView extends JPanel {
         /** 빈 말풍선은 자리만 차지하고 보이지 않는다 */
         void setBubble(String text, Color color) {
             bubbleLabel.setText(text);
-            bubbleLabel.setForeground(color == null ? Theme.INK : color);
+            bubbleLabel.setForeground(color == null ? Theme.TEXT : color);
             bubble.setPainted(!text.isEmpty());
         }
 
@@ -481,10 +481,10 @@ public class GameRoomView extends JPanel {
 
     /** 붉은 낙관 (문제 · 훈장님 귀띔 · 방장) */
     private static RoundBox seal(String text, float size, int top, int side, int bottom) {
-        RoundBox box = new RoundBox(Theme.SEAL, Theme.SEAL_LINE, 2, 10);
+        RoundBox box = new RoundBox(Theme.RED, Theme.RED_DARK, 2, 10);
         box.setLayout(new BorderLayout());
         box.setBorder(BorderFactory.createEmptyBorder(top + 2, side + 2, bottom + 2, side + 2));
-        box.add(label(text, Theme.batangBold(size), Theme.SEAL_TEXT));
+        box.add(label(text, Theme.batangBold(size), Theme.TEXT_LIGHT));
         return box;
     }
 
@@ -494,7 +494,7 @@ public class GameRoomView extends JPanel {
         SealButton(String text) {
             super(text);
             setFont(Theme.batangBold(19));
-            setForeground(Theme.SEAL_TEXT);
+            setForeground(Theme.TEXT_LIGHT);
             setContentAreaFilled(false);
             setBorderPainted(false);
             setFocusPainted(false);
@@ -503,9 +503,9 @@ public class GameRoomView extends JPanel {
         @Override
         protected void paintComponent(Graphics g) {
             Graphics2D g2 = smooth(g);
-            g2.setColor(!isEnabled() ? Theme.PAPER_LINE : getModel().isPressed() ? Theme.SEAL_LINE : Theme.SEAL);
+            g2.setColor(!isEnabled() ? Theme.PAPER_BORDER : getModel().isPressed() ? Theme.RED_DARK : Theme.RED);
             g2.fillRoundRect(0, 0, getWidth(), getHeight(), 12, 12);
-            g2.setColor(Theme.SEAL_LINE);
+            g2.setColor(Theme.RED_DARK);
             g2.setStroke(new BasicStroke(2));
             g2.drawRoundRect(1, 1, getWidth() - 2, getHeight() - 2, 12, 12);
             g2.dispose();
@@ -525,9 +525,9 @@ public class GameRoomView extends JPanel {
         @Override
         protected void paintComponent(Graphics g) {
             Graphics2D g2 = smooth(g);
-            g2.setColor(Theme.WOOD_DARK);
+            g2.setColor(Theme.BROWN);
             g2.fillRoundRect(0, 0, 16, getHeight(), 16, 16);
-            g2.setColor(Theme.INK);
+            g2.setColor(Theme.TEXT);
             g2.setStroke(new BasicStroke(2));
             g2.drawRoundRect(1, 1, 14, getHeight() - 2, 14, 14);
             CAP.paintIcon(this, g2, 4, 7);
@@ -562,12 +562,12 @@ public class GameRoomView extends JPanel {
             if (stick > 0) {
                 g2.setColor(Theme.INCENSE);
                 g2.fillRoundRect(left, barY, stick, 9, 8, 8);
-                g2.setColor(Theme.INK);
+                g2.setColor(Theme.TEXT);
                 g2.setStroke(new BasicStroke(1.5f));
                 g2.drawRoundRect(left, barY, stick - 1, 8, 8, 8);
             }
             int emberX = left + stick;
-            g2.setColor(Theme.PAPER_LINE); // 재
+            g2.setColor(Theme.PAPER_BORDER); // 재
             g2.fillRect(emberX + EMBER.getIconWidth(), barY + 3, getWidth() - emberX - EMBER.getIconWidth(), 2);
             EMBER.paintIcon(this, g2, emberX, h - 22 - EMBER.getIconHeight());
             g2.dispose();
