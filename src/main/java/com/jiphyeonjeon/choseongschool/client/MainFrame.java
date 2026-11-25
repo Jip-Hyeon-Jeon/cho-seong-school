@@ -1,6 +1,6 @@
 package com.jiphyeonjeon.choseongschool.client;
 
-import com.jiphyeonjeon.choseongschool.common.Theme;
+import com.jiphyeonjeon.choseongschool.client.view.Theme;
 import java.awt.Dimension;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;

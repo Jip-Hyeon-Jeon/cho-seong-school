@@ -11,10 +11,10 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import org.junit.jupiter.api.Test;
 import com.jiphyeonjeon.choseongschool.common.LobbyConstants;
-import com.jiphyeonjeon.choseongschool.network.LineMessages;
-import com.jiphyeonjeon.choseongschool.network.TcpConnection;
-import com.jiphyeonjeon.choseongschool.model.ParticipantInfo;
-import com.jiphyeonjeon.choseongschool.model.LobbySettings;
+import com.jiphyeonjeon.choseongschool.common.network.LineMessages;
+import com.jiphyeonjeon.choseongschool.client.network.TcpConnection;
+import com.jiphyeonjeon.choseongschool.common.model.ParticipantInfo;
+import com.jiphyeonjeon.choseongschool.common.model.LobbySettings;
 
 class NetworkBoundaryTest {
     @Test

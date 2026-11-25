@@ -1,7 +1,7 @@
 package com.jiphyeonjeon.choseongschool.client;
 
-import com.jiphyeonjeon.choseongschool.model.GameSession;
-import com.jiphyeonjeon.choseongschool.model.ParticipantInfo;
+import com.jiphyeonjeon.choseongschool.client.model.GameSession;
+import com.jiphyeonjeon.choseongschool.common.model.ParticipantInfo;
 
 import java.util.List;
 
