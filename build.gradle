@@ -44,6 +44,13 @@ tasks.register('runLobbyServer', JavaExec) {
 	standardInput = System.in
 }
 
+// Spring(DB) + 대기실 TCP 서버를 한 번에 실행
+tasks.register('runServer', JavaExec) {
+	classpath = sourceSets.main.runtimeClasspath
+	mainClass = 'com.jiphyeonjeon.choseongschool.ChoSeongSchoolApplication'
+	workingDir = projectDir // application-secret.properties를 프로젝트 루트에서 읽음
+}
+
 tasks.register('runClient', JavaExec) {
 	classpath = sourceSets.main.runtimeClasspath
 	mainClass = 'com.jiphyeonjeon.choseongschool.client.ClientMain'
