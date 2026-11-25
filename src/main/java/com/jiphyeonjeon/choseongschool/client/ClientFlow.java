@@ -125,7 +125,7 @@ public final class ClientFlow {
         @Override
         public void onPlayers(List<ParticipantInfo> players) {
             if (active() && gameView != null) {
-                showPlayers(players, lobbyView.getHostId());
+                showPlayers(players, client.lobbyState().hostId());
             }
         }
 

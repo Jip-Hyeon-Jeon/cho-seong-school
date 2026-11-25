@@ -149,7 +149,7 @@ class ClientFlowTest {
                 flow.get().enterLobby("127.0.0.1", "유나", 0);
             });
             LobbyView lobby = (LobbyView) ((LobbyContainer) host.last()).getComponent(0);
-            waitOnEdt(() -> !lobby.getParticipants().isEmpty());
+            waitOnEdt(() -> lobby.getStartButton().isVisible()); // 입장해서 반장이 됨
 
             SwingUtilities.invokeAndWait(() -> lobby.getExitButton().doClick());
             assertInstanceOf(LoginView.class, host.last());
