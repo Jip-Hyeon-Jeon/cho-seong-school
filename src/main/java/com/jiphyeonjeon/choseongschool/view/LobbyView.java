@@ -3,6 +3,7 @@ package com.jiphyeonjeon.choseongschool.view;
 import com.jiphyeonjeon.choseongschool.common.Theme;
 import com.jiphyeonjeon.choseongschool.model.Difficulty;
 import com.jiphyeonjeon.choseongschool.model.LobbySettings;
+import com.jiphyeonjeon.choseongschool.model.LobbyState;
 import com.jiphyeonjeon.choseongschool.model.ParticipantInfo;
 import com.jiphyeonjeon.choseongschool.model.RoomState;
 
@@ -13,7 +14,11 @@ import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.border.LineBorder;
 
-// Figma 76:779의 1200x740 대기실 배치
+/**
+ * 대기실 화면 (Figma 76:779의 1200x740 배치).
+ * 대기실 상태는 들고 있지 않고, 컨트롤러가 넘겨준 LobbyState를 render()로 그리기만 한다.
+ * 버튼을 누르면 요청 콜백으로 알리고, 보낼 수 있는지는 컨트롤러가 판단한다.
+ */
 public class LobbyView extends JPanel {
     // 참가자 칸 안에서 배지·초상·이름 묶음의 세로 위치 기준
     private static final int PLAYER_GROUP_TOP = 393;
@@ -24,21 +29,15 @@ public class LobbyView extends JPanel {
     private final ButtonGroup rounds = new ButtonGroup();
     private final ButtonGroup seconds = new ButtonGroup();
     private final BufferedImage[] portraits = new BufferedImage[5];
-    private java.util.List<ParticipantInfo> participants = java.util.List.of();
-    private String localPlayerId;
-    private String hostId;
-    private boolean connected = true;
-    private LobbySettings confirmedSettings = LobbySettings.DEFAULT;
-    private boolean settingsReceived;
-    private boolean settingsPending;
-    private boolean startPending;
+    /** 마지막으로 그린 상태 (그리기 전용, 이 화면이 바꾸지 않는다) */
+    private LobbyState state = new LobbyState();
+    /** 이름표를 다시 만들어야 하는지 비교하기 위한 마지막 참가자 목록 */
+    private java.util.List<ParticipantInfo> renderedParticipants;
     private Runnable startRequest;
     private final CountdownOverlay networkCountdown = new CountdownOverlay();
-    private int countdownNumber;
     private java.util.function.Consumer<LobbySettings> settingsRequest;
     private final JLabel count = label("학동 0 / 5명", 18);
     private final java.util.List<JLabel> participantLabels = new java.util.ArrayList<>();
-    private RoomState viewState = RoomState.WAITING;
     private final java.util.List<JLabel> roleBadges = new java.util.ArrayList<>();
     private final JLabel guide = label("", 13);
 
@@ -82,36 +81,20 @@ public class LobbyView extends JPanel {
             place(networkCountdown, 0, 0, Theme.SCREEN_WIDTH, Theme.SCREEN_HEIGHT);
             setComponentZOrder(networkCountdown, 0);
             start.addActionListener(e -> {
-                if (startRequest == null || startPending) return;
-                startPending = true;
-                refreshPermissions();
-                startRequest.run();
+                if (startRequest != null) startRequest.run();
             });
-            refreshPermissions();
+            render(state);
         }
-    }
-
-    public void showRoster(String localId, String newHostId, java.util.List<ParticipantInfo> members) {
-        if (members.isEmpty() || members.size() > 5
-                || members.stream().noneMatch(p -> p.id().equals(localId))
-                || members.stream().noneMatch(p -> p.id().equals(newHostId))
-                || members.stream().map(ParticipantInfo::id).distinct().count() != members.size()) {
-            throw new IllegalArgumentException("참가자 목록에 본인 또는 반장이 없거나 ID가 중복됩니다.");
-        }
-        participants = java.util.List.copyOf(members);
-        localPlayerId = localId;
-        hostId = newHostId;
-        connected = true;
-        rebuildParticipants();
-        refreshPermissions();
     }
 
     private int playerCenterX(int index) {
-        int spacing = Math.min(200, 600 / Math.max(1, participants.size()));
-        return 600 - (participants.size() - 1) * spacing / 2 + index * spacing;
+        int size = state.participants().size();
+        int spacing = Math.min(200, 600 / Math.max(1, size));
+        return 600 - (size - 1) * spacing / 2 + index * spacing;
     }
 
     private void rebuildParticipants() {
+        java.util.List<ParticipantInfo> participants = state.participants();
         for (JLabel label : participantLabels) remove(label);
         participantLabels.clear();
         roleBadges.clear();
@@ -195,19 +178,16 @@ public class LobbyView extends JPanel {
     public int getSelectedSeconds() { return Integer.parseInt(seconds.getSelection().getActionCommand()); }
     public Difficulty getSelectedDifficulty() { return Difficulty.valueOf(levels.getSelection().getActionCommand()); }
 
+    /** 학칙 버튼을 누르면 고른 학칙을 넘길 곳 (컨트롤러가 권한 확인 후 서버로 전송) */
     public void setSettingsRequest(java.util.function.Consumer<LobbySettings> request) {
         settingsRequest = request;
-        refreshPermissions();
     }
 
     private void requestSettings() {
-        if (settingsRequest == null || settingsPending) return;
         LobbySettings proposed = new LobbySettings(getSelectedDifficulty(), getSelectedRounds(), getSelectedSeconds());
-        // 서버 승인 전까지 기존 선택 유지
-        selectSettings(confirmedSettings);
-        settingsPending = true;
-        refreshPermissions();
-        settingsRequest.accept(proposed);
+        // 서버가 확정하기 전까지는 기존 학칙을 표시
+        selectSettings(state.settings());
+        if (settingsRequest != null) settingsRequest.accept(proposed);
     }
 
     private void selectSettings(LobbySettings settings) {
@@ -224,125 +204,60 @@ public class LobbyView extends JPanel {
         }
     }
 
-    public void showSettings(LobbySettings settings) {
-        confirmedSettings = settings;
-        settingsReceived = true;
-        settingsPending = false;
-        startPending = false;
-        selectSettings(settings);
-        refreshPermissions();
-    }
-
-    public void showCommandError(String message) { status.setText(message); }
-
+    /** 시작 버튼을 누르면 알릴 곳 (컨트롤러가 권한 확인 후 서버로 전송) */
     public void setStartRequest(Runnable request) {
         startRequest = request;
-        refreshPermissions();
     }
 
-    public RoomState getViewState() { return viewState; }
-    public int getCountdownNumber() { return countdownNumber; }
     public boolean isCountdownVisible() { return networkCountdown.isVisible(); }
 
-    public void showCountdown(int number) {
-        if (number < 1 || number > 3) throw new IllegalArgumentException("카운트다운은 1~3입니다.");
-        showStarting();
-        countdownNumber = number;
-        networkCountdown.showNumber(number);
-        networkCountdown.setVisible(true);
-        networkCountdown.revalidate();
-        repaint();
-    }
-
-    public void showStartCancelled() {
-        networkCountdown.setVisible(false);
-        countdownNumber = 0;
-        startPending = false;
-        viewState = RoomState.WAITING;
-        exit.setEnabled(true);
-        refreshPermissions();
-        status.setText("학동이 나가 시작을 취소했습니다. 다시 시작할 수 있습니다.");
-    }
-
-    private void refreshPermissions() {
-        boolean isHost = connected && localPlayerId != null && localPlayerId.equals(hostId);
-        boolean canEdit = isHost && viewState == RoomState.WAITING
-                && settingsReceived && settingsRequest != null && !settingsPending && !startPending;
+    /** 대기실 상태를 화면에 그린다. 컨트롤러가 상태를 바꾼 뒤 Swing 스레드에서 호출한다 */
+    public void render(LobbyState current) {
+        state = current;
+        if (current.participants() != renderedParticipants) {
+            renderedParticipants = current.participants();
+            rebuildParticipants();
+        }
+        selectSettings(current.settings());
+        boolean host = current.isHost();
+        RoomState phase = current.phase();
+        boolean editable = current.canEditSettings() && settingsRequest != null;
         for (Component component : getComponents()) {
-            if (component instanceof JToggleButton) component.setEnabled(canEdit);
+            if (component instanceof JToggleButton) component.setEnabled(editable);
         }
-        start.setEnabled(canEdit && startRequest != null);
-        start.setVisible(isHost && viewState == RoomState.WAITING);
-        if (viewState == RoomState.WAITING) {
-            status.setText(isHost ? "학동 " + participants.size() + "명이 모였습니다. 반장이 과거를 시작합니다."
-                    : "반장이 과거를 시작하기를 기다리는 중입니다.");
-            guide.setText(isHost ? "혼자서도 시작할 수 있습니다. 시작하면 버튼이 사라집니다."
-                    : "학칙은 보기만 가능합니다. 캐릭터 아래 그림자가 있는 학동이 나입니다.");
-        }
-        if (viewState == RoomState.WAITING) {
-            guide.setText(settingsPending ? "학칙 변경을 확인하고 있습니다."
-                    : "반장이 시작하면 셋을 센 뒤 과거가 시작됩니다.");
-            if (participants.isEmpty()) status.setText("서버에 입장하는 중입니다.");
-        }
+        start.setEnabled(current.canStart() && startRequest != null);
+        start.setVisible(host && phase == RoomState.WAITING);
+        exit.setEnabled(phase != RoomState.STARTING);
+        boolean counting = phase == RoomState.STARTING && current.countdownNumber() > 0;
+        if (counting) networkCountdown.showNumber(current.countdownNumber());
+        networkCountdown.setVisible(counting);
         for (int i = 0; i < roleBadges.size(); i++) {
-            boolean memberIsHost = participants.get(i).id().equals(hostId);
+            boolean memberIsHost = current.participants().get(i).id().equals(current.hostId());
             roleBadges.get(i).setText(memberIsHost ? "반장" : "학동");
             roleBadges.get(i).setBackground(memberIsHost ? Theme.RED : Theme.BROWN_DARK);
         }
+        status.setText(statusText(current));
+        guide.setText(guideText(current));
+        setComponentZOrder(networkCountdown, 0);
+        revalidate();
         repaint();
     }
 
-    public java.util.List<ParticipantInfo> getParticipants() { return participants; }
-    public String getLocalPlayerId() { return localPlayerId; }
-    public String getHostId() { return hostId; }
-
-    public void showConnectionClosed(String message) {
-        connected = false;
-        networkCountdown.setVisible(false);
-        countdownNumber = 0;
-        viewState = RoomState.WAITING;
-        startPending = false;
-        exit.setEnabled(true);
-        settingsReceived = false;
-        settingsPending = false;
-        participants = java.util.List.of();
-        localPlayerId = null;
-        hostId = null;
-        rebuildParticipants();
-        refreshPermissions();
-        status.setText(message);
-        guide.setText("창을 닫고 접속 정보를 확인한 뒤 다시 실행해 주세요.");
+    private static String statusText(LobbyState s) {
+        if (s.notice() != null) return s.notice();
+        return switch (s.phase()) {
+            case STARTING -> "잠시 후 과거를 시작합니다.";
+            case PLAYING -> "과거가 시작되었습니다.";
+            case WAITING -> s.participants().isEmpty() ? "서버에 입장하는 중입니다."
+                    : s.isHost() ? "학동 " + s.participants().size() + "명이 모였습니다. 반장이 과거를 시작합니다."
+                    : "반장이 과거를 시작하기를 기다리는 중입니다.";
+        };
     }
 
-    public void showStarting() {
-        startPending = false;
-        viewState = RoomState.STARTING;
-        refreshPermissions();
-        status.setText("잠시 후 과거를 시작합니다.");
-        guide.setText("");
-        for (Component component : getComponents()) {
-            if (component instanceof AbstractButton) component.setEnabled(false);
-        }
-        start.setVisible(false);
-    }
-
-    public void showPlaying() {
-        networkCountdown.setVisible(false);
-        countdownNumber = 0;
-        viewState = RoomState.PLAYING;
-        refreshPermissions();
-        status.setText("과거가 시작되었습니다.");
-        exit.setEnabled(true);
-    }
-
-    /** 게임이 끝나 대기 상태로 복귀: 반장은 학칙을 바꾸고 다시 시작할 수 있다 */
-    public void showGameEnded() {
-        networkCountdown.setVisible(false);
-        countdownNumber = 0;
-        startPending = false;
-        viewState = RoomState.WAITING;
-        exit.setEnabled(true);
-        refreshPermissions();
+    private static String guideText(LobbyState s) {
+        if (!s.isConnected()) return "창을 닫고 접속 정보를 확인한 뒤 다시 실행해 주세요.";
+        if (s.phase() != RoomState.WAITING) return "";
+        return s.isSettingsPending() ? "학칙 변경을 확인하고 있습니다." : "반장이 시작하면 셋을 센 뒤 과거가 시작됩니다.";
     }
 
     @Override
@@ -376,6 +291,7 @@ public class LobbyView extends JPanel {
         g.setColor(Theme.RED); g.fillRect(50,185,42,90);
         g.setColor(Theme.MAT); g.fillRoundRect(275,365,650,235,5,5);
         g.setColor(Theme.BROWN_LIGHT); g.drawRoundRect(275,365,650,235,5,5);
+        java.util.List<ParticipantInfo> participants = state.participants();
         for (int i=0;i<participants.size();i++) {
             int centerX = playerCenterX(i);
             BufferedImage portrait = portraits[participants.get(i).character()];
@@ -386,7 +302,7 @@ public class LobbyView extends JPanel {
                 g.setColor(Theme.TEXT); g.setFont(Theme.batang(14));
                 g.drawString("초상 준비 중", centerX-38, PLAYER_GROUP_TOP+83);
             }
-            if (participants.get(i).id().equals(localPlayerId)) {
+            if (participants.get(i).id().equals(state.localId())) {
                 g.setColor(Theme.SHADOW);
                 g.fillOval(centerX-65,PLAYER_GROUP_TOP+125,130,14);
                 g.setColor(Theme.SHADOW_DARK);

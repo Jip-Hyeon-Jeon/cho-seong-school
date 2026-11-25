@@ -41,6 +41,12 @@ client.connect(serverIp, 50024, nickname, characterIndex);
 대기실 `나가기`는 연결을 닫고 로그인 화면으로 돌아간다. 창 종료 시 `client.close()`를 호출하고 재접속은 새 객체로 한다.
 화면 크기는 `Theme`(현재 1200×740)을 따른다.
 
+대기실은 MVC로 나뉜다.
+- Model `model.LobbyState`: 참가자, 반장, 내 번호, 대기·시작 중·게임 중 단계, 카운트다운 숫자, 학칙과 요청 대기 여부, 권한 판단(`canStart` 등)
+- Controller `controller.NetworkLobbyController`: 서버 메시지와 버튼 요청을 받아 상태를 바꾸고 `view.render(state)` 호출. 학칙 변경·시작은 권한 확인 후 서버로 전송
+- View `view.LobbyView`: 상태를 들고 있지 않고 `render(LobbyState)`로 그리기만 함
+다른 화면에서 대기실 상태가 필요하면 `LobbyClient.lobbyState()`로 읽는다(Swing 스레드).
+
 ## 게임 연결
 
 `GameScreenListener`는 Swing 이벤트 스레드에서 호출된다.
