@@ -1,28 +1,30 @@
 package com.jiphyeonjeon.choseongschool.view;
 
+import static com.jiphyeonjeon.choseongschool.view.HanokPainter.drawBox;
+import static com.jiphyeonjeon.choseongschool.view.HanokPainter.drawCenter;
+import static com.jiphyeonjeon.choseongschool.view.HanokPainter.drawImage;
+import static com.jiphyeonjeon.choseongschool.view.HanokPainter.drawLeft;
+import static com.jiphyeonjeon.choseongschool.view.HanokPainter.getImage;
+import static com.jiphyeonjeon.choseongschool.view.HanokPainter.paintHanok;
+import static com.jiphyeonjeon.choseongschool.view.HanokPainter.paintRod;
+import static com.jiphyeonjeon.choseongschool.view.HanokPainter.setQuality;
+import static com.jiphyeonjeon.choseongschool.view.HanokPainter.textWidth;
+
 import java.awt.BasicStroke;
 import java.awt.Color;
-import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Font;
-import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
-import java.awt.RenderingHints;
 import java.awt.Shape;
 import java.awt.event.ActionListener;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.RoundRectangle2D;
-import java.io.IOException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
-import javax.imageio.ImageIO;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -41,9 +43,6 @@ public class ResultView extends JPanel {
 	private static final Font BATANG = Theme.batang(12f);
 	private static final Font BATANG_BOLD = Theme.batangBold(12f);
 
-	//한 번 읽은 이미지 보관 (그릴 때마다 파일을 다시 읽지 않도록)
-	private final Map<String, Image> images = new HashMap<>();
-
 	private JButton waitingRoomBtn;
 	private JButton exitBtn;
 	private List<Player> players = new ArrayList<>();	//점수 높은 순
@@ -53,11 +52,11 @@ public class ResultView extends JPanel {
 		setPreferredSize(new Dimension(Theme.SCREEN_WIDTH, Theme.SCREEN_HEIGHT));
 		setBackground(Theme.BACKGROUND);
 
-		waitingRoomBtn = new ResultButton("서당 마루로", Theme.RED, Theme.RED_DARK, Theme.TEXT_LIGHT);
+		waitingRoomBtn = new RoundButton("서당 마루로", BATANG_BOLD.deriveFont(19f), Theme.RED, Theme.RED_DARK, Theme.TEXT_LIGHT, 6);
 		waitingRoomBtn.setBounds(423, 656, 200, 50);
 		add(waitingRoomBtn);
 
-		exitBtn = new ResultButton("나가기", Theme.PAPER, Theme.BROWN, Theme.TEXT);
+		exitBtn = new RoundButton("나가기", BATANG_BOLD.deriveFont(19f), Theme.PAPER, Theme.BROWN, Theme.TEXT, 6);
 		exitBtn.setBounds(637, 656, 140, 50);
 		add(exitBtn);
 	}
@@ -110,21 +109,9 @@ public class ResultView extends JPanel {
 		g2.dispose();
 	}
 
-	//지붕, 기둥, 마루, 구름, 현판
+	//한옥 틀, 구름, 현판
 	private void paintFrame(Graphics2D g2) {
-		drawImage(g2, "/images/result/roof.png", 0, 0, Theme.SCREEN_WIDTH, 72);
-		drawImage(g2, "/images/result/dancheong.png", 0, 72, Theme.SCREEN_WIDTH, 18);
-
-		for (int x : new int[] { 0, 1176 }) {
-			drawBox(g2, x, 90, 24, 626, 0, 2, Theme.PILLAR, Theme.RED_DARK);
-			drawBox(g2, x - 4, 90, 32, 10, 0, 0, Theme.GREEN, null);
-			drawBox(g2, x - 6, 706, 36, 12, 3, 0, Theme.STONE, null);
-		}
-
-		drawBox(g2, 0, 716, Theme.SCREEN_WIDTH, 24, 0, 0, Theme.FLOOR, null);
-		for (int x = 150; x <= 1050; x += 150) {
-			drawBox(g2, x, 716, 2, 24, 0, 0, Theme.FLOOR_LINE, null);
-		}
+		paintHanok(g2);
 
 		drawImage(g2, "/images/result/cloud.png", 110, 108, 121, 58);
 		drawImage(g2, "/images/result/cloud.png", 960, 108, 121, 58);
@@ -200,10 +187,7 @@ public class ResultView extends JPanel {
 		g2.fillRect(504, 632, 632, 2);
 
 		for (int x : new int[] { 488, 1136 }) {
-			drawBox(g2, x, 194, 16, 450, 8, 2, Theme.BROWN, Theme.TEXT);
-			g2.setColor(Theme.GOLD);
-			g2.fillOval(x + 4, 201, 8, 8);
-			g2.fillOval(x + 4, 629, 8, 8);
+			paintRod(g2, x, 194, 450);
 		}
 
 		//고운바탕에 없는 한자라서 윈도우 바탕체 사용
@@ -271,117 +255,6 @@ public class ResultView extends JPanel {
 			return;
 		}
 		g2.drawImage(image, x, y, size, size, null);
-	}
-
-	private void drawImage(Graphics2D g2, String path, int x, int y, int width, int height) {
-		Image image = getImage(path);
-		if (image != null) {
-			g2.drawImage(image, x, y, width, height, null);
-		}
-	}
-
-	private Image getImage(String path) {
-		if (path == null) {
-			return null;
-		}
-		if (!images.containsKey(path)) {
-			Image image = null;
-			URL url = ResultView.class.getResource(path);
-			if (url != null) {
-				try {
-					image = ImageIO.read(url);
-				} catch (IOException e) {
-					System.out.println("이미지를 읽을 수 없음: " + path);
-				}
-			}
-			images.put(path, image);
-		}
-		return images.get(path);
-	}
-
-	//x에서 시작하는 글자, 너비가 넘치면 글자 크기를 줄임
-	private static void drawLeft(Graphics2D g2, String text, Font font, int size, Color color, int x, int centerY,
-			int maxWidth) {
-		g2.setFont(fitFont(g2, text, font, size, maxWidth));
-		g2.setColor(color);
-		FontMetrics fm = g2.getFontMetrics();
-		g2.drawString(text, x, centerY + (fm.getAscent() - fm.getDescent()) / 2);
-	}
-
-	//centerX가 가운데인 글자
-	private static void drawCenter(Graphics2D g2, String text, Font font, int size, Color color, int centerX,
-			int centerY, int maxWidth) {
-		int width = textWidth(g2, text, font, size, maxWidth);
-		drawLeft(g2, text, font, size, color, centerX - width / 2, centerY, maxWidth);
-	}
-
-	private static int textWidth(Graphics2D g2, String text, Font font, int size, int maxWidth) {
-		return g2.getFontMetrics(fitFont(g2, text, font, size, maxWidth)).stringWidth(text);
-	}
-
-	private static Font fitFont(Graphics2D g2, String text, Font font, int size, int maxWidth) {
-		Font result = font.deriveFont((float) size);
-		while (size > 10 && g2.getFontMetrics(result).stringWidth(text) > maxWidth) {
-			size--;
-			result = font.deriveFont((float) size);
-		}
-		return result;
-	}
-
-	//둥근 상자, 테두리는 상자 안쪽에 그림 (fill, border는 null이면 생략)
-	private static void drawBox(Graphics2D g2, int x, int y, int width, int height, int radius, int borderWidth,
-			Color fill, Color border) {
-		if (fill != null) {
-			g2.setColor(fill);
-			g2.fillRoundRect(x, y, width, height, radius * 2, radius * 2);
-		}
-		if (border != null && borderWidth > 0) {
-			double half = borderWidth / 2.0;
-			double arc = Math.max(0, radius * 2 - borderWidth);
-			g2.setColor(border);
-			g2.setStroke(new BasicStroke(borderWidth));
-			g2.draw(new RoundRectangle2D.Double(x + half, y + half, width - borderWidth, height - borderWidth, arc,
-					arc));
-		}
-	}
-
-	private static void setQuality(Graphics2D g2) {
-		g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-		g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-		g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
-		g2.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
-	}
-
-	/** 결과 화면 버튼 */
-	private static class ResultButton extends JButton {
-
-		private static final long serialVersionUID = 1L;
-		private final Color fill;
-		private final Color border;
-
-		ResultButton(String text, Color fill, Color border, Color textColor) {
-			super(text);
-			this.fill = fill;
-			this.border = border;
-			setForeground(textColor);
-			setFont(BATANG_BOLD.deriveFont(19f));
-			setContentAreaFilled(false);
-			setBorderPainted(false);
-			setFocusPainted(false);
-			setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-		}
-
-		@Override
-		protected void paintComponent(Graphics g) {
-			Graphics2D g2 = (Graphics2D) g.create();
-			setQuality(g2);
-			Color color = getModel().isPressed() ? fill.darker() : fill;
-			int borderWidth = isFocusOwner() ? 3 : 2;	//키보드로 선택된 버튼은 테두리를 굵게
-			drawBox(g2, 0, 0, getWidth(), getHeight(), 6, borderWidth, color, border);
-			drawCenter(g2, getText(), getFont(), 19, getForeground(), getWidth() / 2, getHeight() / 2,
-					getWidth() - 36);
-			g2.dispose();
-		}
 	}
 
 	/** 화면 확인용 실행 (통신 연결 후 삭제) */
