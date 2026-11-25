@@ -46,7 +46,7 @@ client.connect(serverIp, 50024, nickname, characterIndex);
 `GameScreenListener`는 Swing 이벤트 스레드에서 호출된다.
 
 - `onStart(GameSession)`: 참가자·학칙 전달 및 게임 화면으로 전환.
-- `onMessage(String)`: 게임 컨트롤러의 `handle(line)` 호출.
+- `onMessage(String)`: 게임 컨트롤러의 `handle(line)` 호출. 게임 시작 후 대기실 메시지가 아닌 줄은 이름과 관계없이 모두 전달한다.
 - `onPlayers(List<ParticipantInfo>)`: 게임 중 참가자 목록 갱신.
 - `onDisconnected(String)`, `onError(String)`: 입력 비활성화 또는 오류 안내.
 

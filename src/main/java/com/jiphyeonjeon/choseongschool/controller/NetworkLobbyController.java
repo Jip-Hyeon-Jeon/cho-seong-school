@@ -102,9 +102,6 @@ public final class NetworkLobbyController {
                         gameScreen.onStart(session);
                     }
                 }
-                case "QUESTION", "HINT", "ANSWER" -> {
-                    if (gameStarted) gameScreen.onMessage(line);
-                }
                 case "ERROR" -> {
                     if (fields.length != 2) return;
                     if (localId != null) {
@@ -132,7 +129,11 @@ public final class NetworkLobbyController {
                     closed = true;
                     view.showConnectionClosed(endMessage);
                 }
-                default -> { } // 이 모듈에 정의되지 않은 메시지 제외
+                // 대기실 메시지가 아니면 게임 메시지: 게임 중에만 게임 화면으로 그대로 전달
+                // (QUESTION, TIME, SCORE, GAME_END 등의 해석은 게임 화면 컨트롤러가 맡는다)
+                default -> {
+                    if (gameStarted) gameScreen.onMessage(line);
+                }
             }
         } catch (IllegalArgumentException e) {
             // 잘못된 숫자나 참가자 정보 수신 시 기존 화면 보존
