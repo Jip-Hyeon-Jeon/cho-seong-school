@@ -1,11 +1,13 @@
-package com.jiphyeonjeon.choseongschool.lobby.client;
+package com.jiphyeonjeon.choseongschool.controller;
 
-import com.jiphyeonjeon.choseongschool.lobby.model.Difficulty;
-import com.jiphyeonjeon.choseongschool.lobby.model.GameSession;
-import com.jiphyeonjeon.choseongschool.lobby.model.LobbySettings;
-import com.jiphyeonjeon.choseongschool.lobby.view.LobbyView;
-import com.jiphyeonjeon.choseongschool.lobby.model.ParticipantInfo;
-import com.jiphyeonjeon.choseongschool.lobby.model.RoomState;
+import com.jiphyeonjeon.choseongschool.client.GameScreenListener;
+import com.jiphyeonjeon.choseongschool.common.LobbyConstants;
+import com.jiphyeonjeon.choseongschool.model.Difficulty;
+import com.jiphyeonjeon.choseongschool.model.GameSession;
+import com.jiphyeonjeon.choseongschool.model.LobbySettings;
+import com.jiphyeonjeon.choseongschool.model.ParticipantInfo;
+import com.jiphyeonjeon.choseongschool.model.RoomState;
+import com.jiphyeonjeon.choseongschool.view.LobbyView;
 
 import java.util.*;
 import javax.swing.SwingUtilities;
@@ -49,7 +51,7 @@ public final class NetworkLobbyController {
                     if (localId == null || fields.length < 3) return;
                     requireId(fields[1]);
                     int count = Integer.parseInt(fields[2]);
-                    if (count < 1 || count > 5 || fields.length != 3 + count * 3) return;
+                    if (count < 1 || count > LobbyConstants.MAX_PLAYERS || fields.length != 3 + count * 3) return;
                     List<ParticipantInfo> members = new ArrayList<>();
                     Set<String> ids = new HashSet<>();
                     Set<String> names = new HashSet<>();

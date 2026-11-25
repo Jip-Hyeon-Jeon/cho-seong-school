@@ -1,10 +1,12 @@
-package com.jiphyeonjeon.choseongschool.lobby.client;
+package com.jiphyeonjeon.choseongschool.client;
 
-import com.jiphyeonjeon.choseongschool.lobby.network.LineMessages;
-import com.jiphyeonjeon.choseongschool.lobby.model.LobbyConstants;
-import com.jiphyeonjeon.choseongschool.lobby.view.LobbyView;
-import com.jiphyeonjeon.choseongschool.lobby.model.ParticipantInfo;
-import com.jiphyeonjeon.choseongschool.lobby.network.TcpConnection;
+import com.jiphyeonjeon.choseongschool.controller.NetworkLobbyController;
+
+import com.jiphyeonjeon.choseongschool.network.LineMessages;
+import com.jiphyeonjeon.choseongschool.common.LobbyConstants;
+import com.jiphyeonjeon.choseongschool.view.LobbyView;
+import com.jiphyeonjeon.choseongschool.model.ParticipantInfo;
+import com.jiphyeonjeon.choseongschool.network.TcpConnection;
 
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;

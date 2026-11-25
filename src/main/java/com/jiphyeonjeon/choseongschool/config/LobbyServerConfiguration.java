@@ -10,8 +10,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import com.jiphyeonjeon.choseongschool.lobby.server.GameEvents;
-import com.jiphyeonjeon.choseongschool.lobby.server.LobbyServer;
+import com.jiphyeonjeon.choseongschool.server.GameEvents;
+import com.jiphyeonjeon.choseongschool.server.LobbyServer;
 
 /**
  * Spring 앱을 실행하면 DB와 함께 대기실 TCP 서버(LobbyServer)도 열리도록 등록한다.

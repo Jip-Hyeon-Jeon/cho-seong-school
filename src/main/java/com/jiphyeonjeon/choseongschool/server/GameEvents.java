@@ -1,7 +1,7 @@
-package com.jiphyeonjeon.choseongschool.lobby.server;
+package com.jiphyeonjeon.choseongschool.server;
 
-import com.jiphyeonjeon.choseongschool.lobby.model.LobbySettings;
-import com.jiphyeonjeon.choseongschool.lobby.model.ParticipantInfo;
+import com.jiphyeonjeon.choseongschool.model.LobbySettings;
+import com.jiphyeonjeon.choseongschool.model.ParticipantInfo;
 
 import java.util.List;
 import java.util.function.Consumer;

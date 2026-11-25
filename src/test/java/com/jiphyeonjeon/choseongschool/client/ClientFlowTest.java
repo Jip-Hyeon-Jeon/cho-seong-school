@@ -3,12 +3,12 @@ package com.jiphyeonjeon.choseongschool.client;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.jiphyeonjeon.choseongschool.lobby.model.LobbySettings;
-import com.jiphyeonjeon.choseongschool.lobby.model.ParticipantInfo;
-import com.jiphyeonjeon.choseongschool.lobby.server.GameEvents;
-import com.jiphyeonjeon.choseongschool.lobby.server.LobbyServer;
-import com.jiphyeonjeon.choseongschool.lobby.view.LobbyContainer;
-import com.jiphyeonjeon.choseongschool.lobby.view.LobbyView;
+import com.jiphyeonjeon.choseongschool.model.LobbySettings;
+import com.jiphyeonjeon.choseongschool.model.ParticipantInfo;
+import com.jiphyeonjeon.choseongschool.server.GameEvents;
+import com.jiphyeonjeon.choseongschool.server.LobbyServer;
+import com.jiphyeonjeon.choseongschool.view.LobbyContainer;
+import com.jiphyeonjeon.choseongschool.view.LobbyView;
 import com.jiphyeonjeon.choseongschool.view.GameRoomView;
 import com.jiphyeonjeon.choseongschool.view.LoginView;
 import java.net.InetAddress;

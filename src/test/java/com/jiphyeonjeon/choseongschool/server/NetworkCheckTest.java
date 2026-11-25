@@ -1,9 +1,8 @@
-package com.jiphyeonjeon.choseongschool.lobby;
-import com.jiphyeonjeon.choseongschool.lobby.model.*;
-import com.jiphyeonjeon.choseongschool.lobby.view.*;
-import com.jiphyeonjeon.choseongschool.lobby.client.*;
-import com.jiphyeonjeon.choseongschool.lobby.network.*;
-import com.jiphyeonjeon.choseongschool.lobby.server.*;
+package com.jiphyeonjeon.choseongschool.server;
+import com.jiphyeonjeon.choseongschool.model.*;
+import com.jiphyeonjeon.choseongschool.view.*;
+import com.jiphyeonjeon.choseongschool.client.*;
+import com.jiphyeonjeon.choseongschool.network.*;
 
 import java.util.concurrent.*;
 

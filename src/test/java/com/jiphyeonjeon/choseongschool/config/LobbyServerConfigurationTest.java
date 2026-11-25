@@ -18,10 +18,10 @@ import java.util.function.Consumer;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 
-import com.jiphyeonjeon.choseongschool.lobby.model.LobbySettings;
-import com.jiphyeonjeon.choseongschool.lobby.model.ParticipantInfo;
-import com.jiphyeonjeon.choseongschool.lobby.server.GameEvents;
-import com.jiphyeonjeon.choseongschool.lobby.server.LobbyServer;
+import com.jiphyeonjeon.choseongschool.model.LobbySettings;
+import com.jiphyeonjeon.choseongschool.model.ParticipantInfo;
+import com.jiphyeonjeon.choseongschool.server.GameEvents;
+import com.jiphyeonjeon.choseongschool.server.LobbyServer;
 
 /** DB 없이 대기실 서버 Bean의 생성·게임 로직 주입·종료 정리를 확인한다 */
 class LobbyServerConfigurationTest {

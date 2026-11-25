@@ -1,4 +1,4 @@
-package com.jiphyeonjeon.choseongschool.lobby.model;
+package com.jiphyeonjeon.choseongschool.common;
 
 /** 대기실 클라이언트·서버 공용 상수. 화면 크기는 GameConstants.Screen 참조 */
 public final class LobbyConstants {
