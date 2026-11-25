@@ -1,5 +1,6 @@
 package com.jiphyeonjeon.choseongschool.view;
 
+import com.jiphyeonjeon.choseongschool.common.Theme;
 import com.jiphyeonjeon.choseongschool.model.Difficulty;
 import com.jiphyeonjeon.choseongschool.model.LobbySettings;
 import com.jiphyeonjeon.choseongschool.model.LobbyState;
@@ -19,13 +20,6 @@ import javax.swing.border.LineBorder;
  * 버튼을 누르면 요청 콜백으로 알리고, 보낼 수 있는지는 컨트롤러가 판단한다.
  */
 public class LobbyView extends JPanel {
-    static final int WIDTH = 1200;
-    static final int HEIGHT = 740;
-    static final Color PAPER = new Color(0xF4EBD9);
-    static final Color CARD = new Color(253, 250, 242);
-    static final Color INK = new Color(78, 52, 46);
-    static final Color RED = new Color(169, 50, 38);
-    static final Color GOLD = new Color(185, 160, 120);
     // 참가자 칸 안에서 배지·초상·이름 묶음의 세로 위치 기준
     private static final int PLAYER_GROUP_TOP = 393;
     private final JButton start = button("과거 시작");
@@ -48,14 +42,14 @@ public class LobbyView extends JPanel {
     private final JLabel guide = label("", 13);
 
     public LobbyView() {
-        UIManager.put("ToggleButton.select", RED);
+        UIManager.put("ToggleButton.select", Theme.RED);
         setLayout(null);
-        setPreferredSize(new Dimension(WIDTH, HEIGHT));
-        setBackground(PAPER);
+        setPreferredSize(new Dimension(Theme.SCREEN_WIDTH, Theme.SCREEN_HEIGHT));
+        setBackground(Theme.BACKGROUND);
         // 캐릭터 번호 = 파일 번호: 0 세종대왕, 1 퇴계이황, 2 율곡이이, 3 신사임당, 4 이순신
         for (int i = 0; i < portraits.length; i++) {
             try {
-                var resource = LobbyView.class.getResource("/lobby/portraits/ch" + i + ".png");
+                var resource = LobbyView.class.getResource(Theme.portraitPath(i));
                 if (resource == null) continue; // 파일이 없으면 "초상 준비 중"으로 표시
                 portraits[i] = ImageIO.read(resource);
             } catch (IOException e) {
@@ -63,12 +57,12 @@ public class LobbyView extends JPanel {
             }
         }
         JLabel title = label("서당 마루", 28);
-        title.setForeground(CARD);
+        title.setForeground(Theme.TEXT_LIGHT);
         place(title, 50, 100, 165, 55);
         place(count, 230, 110, 140, 35);
         place(exit, 1040, 108, 108, 42);
         JLabel rules = label("<html>학<br>칙</html>", 23);
-        rules.setForeground(CARD);
+        rules.setForeground(Theme.TEXT_LIGHT);
         place(rules, 50, 185, 42, 90);
         JLabel help = label("서당 학칙은 반장만 바꿀 수 있습니다", 17);
         help.setHorizontalAlignment(SwingConstants.LEFT);
@@ -77,14 +71,14 @@ public class LobbyView extends JPanel {
         addOptions("총 문제 수", rounds, new String[]{"5", "10", "15", "20"}, new String[]{"5", "10", "15", "20"}, 1, 290);
         addOptions("풀이 시간", seconds, new String[]{"30초", "15초"}, new String[]{"30", "15"}, 0, 535);
         place(status, 100, 310, 1000, 40);
-        start.setBackground(RED);
-        start.setForeground(Color.WHITE);
-        start.setFont(new Font("맑은 고딕", Font.BOLD, 23));
+        start.setBackground(Theme.RED);
+        start.setForeground(Theme.TEXT_LIGHT);
+        start.setFont(Theme.batangBold(23));
         place(start, 485, 615, 230, 54);
         place(guide, 250, 677, 700, 25);
         {
             networkCountdown.setVisible(false);
-            place(networkCountdown, 0, 0, WIDTH, HEIGHT);
+            place(networkCountdown, 0, 0, Theme.SCREEN_WIDTH, Theme.SCREEN_HEIGHT);
             setComponentZOrder(networkCountdown, 0);
             start.addActionListener(e -> {
                 if (startRequest != null) startRequest.run();
@@ -111,8 +105,8 @@ public class LobbyView extends JPanel {
             JLabel name = label(participants.get(i).nickname(), 18);
             name.putClientProperty("html.disable", Boolean.TRUE);
             name.setOpaque(true);
-            name.setBackground(new Color(214, 174, 111));
-            name.setBorder(new LineBorder(new Color(137, 91, 53), 2));
+            name.setBackground(Theme.BROWN_LIGHT);
+            name.setBorder(new LineBorder(Theme.BROWN, 2));
             place(name, centerX - nameWidth / 2, PLAYER_GROUP_TOP + 141, nameWidth, 38);
             participantLabels.add(name);
             // 반장 여부와 본인 여부를 독립적으로 구분
@@ -120,9 +114,9 @@ public class LobbyView extends JPanel {
             roleBadges.add(roleBadge);
             participantLabels.add(roleBadge);
             roleBadge.setOpaque(true);
-            roleBadge.setBackground(i == 0 ? RED : INK);
-            roleBadge.setForeground(CARD);
-            roleBadge.setBorder(new LineBorder(GOLD));
+            roleBadge.setBackground(i == 0 ? Theme.RED : Theme.BROWN_DARK);
+            roleBadge.setForeground(Theme.TEXT_LIGHT);
+            roleBadge.setBorder(new LineBorder(Theme.PAPER_BORDER));
             place(roleBadge, centerX - 34, PLAYER_GROUP_TOP, 68, 26);
         }
         revalidate();
@@ -137,11 +131,11 @@ public class LobbyView extends JPanel {
         for (int i = 0; i < labels.length; i++) {
             JToggleButton option = new JToggleButton(labels[i]);
             option.setUI(new javax.swing.plaf.basic.BasicToggleButtonUI());
-            option.setFont(new Font("맑은 고딕", Font.PLAIN, 16));
+            option.setFont(Theme.batang(16));
             option.setActionCommand(values[i]);
             option.setFocusPainted(false);
             option.setMargin(new Insets(0, 0, 0, 0));
-            option.setBorder(new LineBorder(INK));
+            option.setBorder(new LineBorder(Theme.BROWN));
             option.addItemListener(e -> styleOption(option));
             option.addActionListener(e -> requestSettings());
             group.add(option);
@@ -152,8 +146,8 @@ public class LobbyView extends JPanel {
     }
 
     private void styleOption(JToggleButton option) {
-        option.setBackground(option.isSelected() ? RED : CARD);
-        option.setForeground(option.isSelected() ? Color.WHITE : INK);
+        option.setBackground(option.isSelected() ? Theme.RED : Theme.PAPER);
+        option.setForeground(option.isSelected() ? Theme.TEXT_LIGHT : Theme.TEXT);
     }
 
     private void place(JComponent component, int x, int y, int w, int h) {
@@ -163,18 +157,18 @@ public class LobbyView extends JPanel {
 
     private static JLabel label(String text, int size) {
         JLabel label = new JLabel(text, SwingConstants.CENTER);
-        label.setFont(new Font("맑은 고딕", Font.PLAIN, size));
-        label.setForeground(INK);
+        label.setFont(Theme.batang(size));
+        label.setForeground(Theme.TEXT);
         return label;
     }
 
     private static JButton button(String text) {
         JButton button = new JButton(text);
-        button.setFont(new Font("맑은 고딕", Font.PLAIN, 17));
-        button.setBackground(CARD);
-        button.setForeground(INK);
+        button.setFont(Theme.batang(17));
+        button.setBackground(Theme.PAPER);
+        button.setForeground(Theme.TEXT);
         button.setFocusPainted(false);
-        button.setBorder(new LineBorder(INK, 1));
+        button.setBorder(new LineBorder(Theme.BROWN, 1));
         return button;
     }
 
@@ -240,7 +234,7 @@ public class LobbyView extends JPanel {
         for (int i = 0; i < roleBadges.size(); i++) {
             boolean memberIsHost = current.participants().get(i).id().equals(current.hostId());
             roleBadges.get(i).setText(memberIsHost ? "반장" : "학동");
-            roleBadges.get(i).setBackground(memberIsHost ? RED : INK);
+            roleBadges.get(i).setBackground(memberIsHost ? Theme.RED : Theme.BROWN_DARK);
         }
         status.setText(statusText(current));
         guide.setText(guideText(current));
@@ -271,31 +265,32 @@ public class LobbyView extends JPanel {
         super.paintComponent(graphics);
         Graphics2D g = (Graphics2D) graphics.create();
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
         // 시안을 참고해 Java2D로 재현한 기와와 단청
-        g.setColor(new Color(49, 51, 60)); g.fillRect(0, 0, WIDTH, 65);
-        for (int x = 0; x < WIDTH; x += 28) {
-            g.setColor(new Color(78, 79, 87)); g.fillRect(x + 4, 12, 13, 44);
-            g.setColor(new Color(142, 142, 146)); g.fillOval(x + 2, 48, 18, 16);
-            g.setColor(new Color(47, 48, 53)); g.fillOval(x + 7, 53, 8, 7);
+        g.setColor(Theme.ROOF); g.fillRect(0, 0, Theme.SCREEN_WIDTH, 65);
+        for (int x = 0; x < Theme.SCREEN_WIDTH; x += 28) {
+            g.setColor(Theme.ROOF_TILE); g.fillRect(x + 4, 12, 13, 44);
+            g.setColor(Theme.ROOF_TILE_LIGHT); g.fillOval(x + 2, 48, 18, 16);
+            g.setColor(Theme.ROOF_TILE_DARK); g.fillOval(x + 7, 53, 8, 7);
         }
-        g.setColor(new Color(46, 104, 86)); g.fillRect(0, 65, WIDTH, 29);
-        g.setColor(GOLD); g.fillRect(0, 65, WIDTH, 3); g.fillRect(0, 89, WIDTH, 3);
-        for (int x = 15; x < WIDTH; x += 60) {
-            g.setColor(RED); g.fillOval(x, 73, 10, 10);
-            g.setColor(CARD); g.drawOval(x, 73, 10, 10);
-            g.setColor(new Color(214, 172, 65));
+        g.setColor(Theme.GREEN); g.fillRect(0, 65, Theme.SCREEN_WIDTH, 29);
+        g.setColor(Theme.GOLD); g.fillRect(0, 65, Theme.SCREEN_WIDTH, 3); g.fillRect(0, 89, Theme.SCREEN_WIDTH, 3);
+        for (int x = 15; x < Theme.SCREEN_WIDTH; x += 60) {
+            g.setColor(Theme.RED); g.fillOval(x, 73, 10, 10);
+            g.setColor(Theme.PAPER); g.drawOval(x, 73, 10, 10);
+            g.setColor(Theme.GOLD);
             g.fillPolygon(new int[]{x+28,x+34,x+28,x+22}, new int[]{72,78,84,78},4);
         }
-        g.setColor(RED); g.fillRect(0, 94, 19, 626); g.fillRect(1181, 94, 19, 626);
-        g.setColor(new Color(137, 93, 54)); g.fillRect(0, 719, WIDTH, 21);
-        g.setColor(INK); for(int x=100;x<WIDTH;x+=150) g.drawLine(x,720,x,740);
-        g.setColor(INK); g.fillRoundRect(50,100,165,55,4,4);
-        g.setColor(GOLD); g.setStroke(new BasicStroke(3)); g.drawRoundRect(50,100,165,55,4,4);
-        g.setColor(CARD); g.fillRoundRect(50,170,1100,118,4,4);
-        g.setColor(GOLD); g.setStroke(new BasicStroke(1.5f)); g.drawRoundRect(50,170,1100,118,4,4);
-        g.setColor(RED); g.fillRect(50,185,42,90);
-        g.setColor(new Color(231, 212, 162)); g.fillRoundRect(275,365,650,235,5,5);
-        g.setColor(GOLD); g.drawRoundRect(275,365,650,235,5,5);
+        g.setColor(Theme.PILLAR); g.fillRect(0, 94, 19, 626); g.fillRect(1181, 94, 19, 626);
+        g.setColor(Theme.FLOOR); g.fillRect(0, 719, Theme.SCREEN_WIDTH, 21);
+        g.setColor(Theme.FLOOR_LINE); for(int x=100;x<Theme.SCREEN_WIDTH;x+=150) g.drawLine(x,720,x,Theme.SCREEN_HEIGHT);
+        g.setColor(Theme.BROWN_DARK); g.fillRoundRect(50,100,165,55,4,4);
+        g.setColor(Theme.GOLD); g.setStroke(new BasicStroke(3)); g.drawRoundRect(50,100,165,55,4,4);
+        g.setColor(Theme.PAPER); g.fillRoundRect(50,170,1100,118,4,4);
+        g.setColor(Theme.PAPER_BORDER); g.setStroke(new BasicStroke(1.5f)); g.drawRoundRect(50,170,1100,118,4,4);
+        g.setColor(Theme.RED); g.fillRect(50,185,42,90);
+        g.setColor(Theme.MAT); g.fillRoundRect(275,365,650,235,5,5);
+        g.setColor(Theme.BROWN_LIGHT); g.drawRoundRect(275,365,650,235,5,5);
         java.util.List<ParticipantInfo> participants = state.participants();
         for (int i=0;i<participants.size();i++) {
             int centerX = playerCenterX(i);
@@ -303,14 +298,14 @@ public class LobbyView extends JPanel {
             if (portrait != null) {
                 g.drawImage(portrait,centerX-50,PLAYER_GROUP_TOP+28,100,100,null);
             } else {
-                g.setColor(CARD); g.fillOval(centerX-50,PLAYER_GROUP_TOP+28,100,100);
-                g.setColor(INK); g.setFont(new Font("맑은 고딕", Font.PLAIN, 14));
+                g.setColor(Theme.PAPER); g.fillOval(centerX-50,PLAYER_GROUP_TOP+28,100,100);
+                g.setColor(Theme.TEXT); g.setFont(Theme.batang(14));
                 g.drawString("초상 준비 중", centerX-38, PLAYER_GROUP_TOP+83);
             }
             if (participants.get(i).id().equals(state.localId())) {
-                g.setColor(new Color(78,52,46,45));
+                g.setColor(Theme.SHADOW);
                 g.fillOval(centerX-65,PLAYER_GROUP_TOP+125,130,14);
-                g.setColor(new Color(78,52,46,75));
+                g.setColor(Theme.SHADOW_DARK);
                 g.fillOval(centerX-53,PLAYER_GROUP_TOP+128,106,8);
             }
         }

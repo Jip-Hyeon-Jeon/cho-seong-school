@@ -1,5 +1,6 @@
 package com.jiphyeonjeon.choseongschool.client;
 
+import com.jiphyeonjeon.choseongschool.common.Theme;
 import com.jiphyeonjeon.choseongschool.controller.GameRoomController;
 import com.jiphyeonjeon.choseongschool.controller.GameRoomController.FinalScore;
 import com.jiphyeonjeon.choseongschool.controller.LoginController;
@@ -165,7 +166,7 @@ public final class ClientFlow {
         /** 캐릭터 번호 = 대기실 초상 파일 번호 */
         private String portrait(String nickname) {
             Integer character = characters.get(nickname);
-            return character == null ? null : "/lobby/portraits/ch" + character + ".png";
+            return character == null ? null : Theme.portraitPath(character);
         }
 
         private void showPlayers(List<ParticipantInfo> players, String hostId) {

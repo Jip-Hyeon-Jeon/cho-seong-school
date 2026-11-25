@@ -1,13 +1,13 @@
 package com.jiphyeonjeon.choseongschool.client;
 
-import com.jiphyeonjeon.choseongschool.common.GameConstants.Screen;
+import com.jiphyeonjeon.choseongschool.common.Theme;
 import java.awt.Dimension;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 
-/** 팀 공통 크기(GameConstants.Screen) 창 하나. 로그인 → 대기실 → 게임 화면을 이 창의 내용만 바꿔 보여 준다 */
+/** 팀 공통 크기(Theme.SCREEN_WIDTH, Theme.SCREEN_HEIGHT) 창 하나. 로그인 → 대기실 → 게임 화면을 이 창의 내용만 바꿔 보여 준다 */
 public final class MainFrame implements ScreenHost {
 
     private final JFrame frame = new JFrame("초성서당");
@@ -30,7 +30,7 @@ public final class MainFrame implements ScreenHost {
 
     @Override
     public void show(JComponent screen) {
-        screen.setPreferredSize(new Dimension(Screen.WIDTH, Screen.HEIGHT));
+        screen.setPreferredSize(new Dimension(Theme.SCREEN_WIDTH, Theme.SCREEN_HEIGHT));
         frame.setContentPane(screen);
         frame.revalidate();
         frame.repaint();
