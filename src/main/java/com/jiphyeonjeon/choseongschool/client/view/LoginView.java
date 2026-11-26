@@ -176,7 +176,7 @@ public class LoginView extends JPanel {
         g2.setColor(Theme.RED);
         g2.fillRect(718, 339, 394, 2);
 
-        drawLeft(g2, "학동이여, 초성서당의 법도를 알려드리오.", BATANG_BOLD, 16, Theme.TEXT, 718, 362, 394);
+        drawCenter(g2, "학동이여, 초성서당의 법도를 알려드리오.", BATANG_BOLD, 16, Theme.TEXT, 915, 362, 394);
         int y = 397;
         for (String rule : RULES) {
             y = drawWrapped(g2, rule, 718, y, 394);

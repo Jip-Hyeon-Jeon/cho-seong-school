@@ -138,8 +138,7 @@ public class LobbyView extends JPanel {
         heading.setHorizontalAlignment(SwingConstants.LEFT);
         place(heading, x, 213, 150, 26);
         for (int i = 0; i < labels.length; i++) {
-            JToggleButton option = new JToggleButton(labels[i]);
-            option.setUI(new javax.swing.plaf.basic.BasicToggleButtonUI());
+            JToggleButton option = new OptionButton(labels[i]);
             option.setFont(Theme.batangBold(17));
             option.setActionCommand(values[i]);
             option.setFocusPainted(false);
@@ -202,6 +201,33 @@ public class LobbyView extends JPanel {
                 g.drawString(getText(), (float) ((getWidth() - bounds.getWidth()) / 2 - bounds.getX()),
                         (float) ((getHeight() - bounds.getHeight()) / 2 - bounds.getY()));
             }
+            g.dispose();
+        }
+    }
+
+    /** 학칙 팻말 (하, 중, 상 등). 글자를 실제 모양 기준으로 위아래, 좌우 가운데에 그린다 */
+    private static class OptionButton extends JToggleButton {
+        OptionButton(String text) {
+            super(text);
+        }
+
+        @Override
+        protected void paintComponent(Graphics graphics) {
+            Graphics2D g = (Graphics2D) graphics.create();
+            HanokPainter.setQuality(g);
+            g.setColor(getBackground());
+            g.fillRect(0, 0, getWidth(), getHeight());
+
+            // 반장이 아니라 바꿀 수 없을 때는 글자를 바탕보다 조금 어두운 색으로 흐리게
+            Color color = getForeground();
+            if (!isEnabled()) {
+                color = getBackground().darker();
+            }
+            var bounds = getFont().createGlyphVector(g.getFontRenderContext(), getText()).getVisualBounds();
+            g.setFont(getFont());
+            g.setColor(color);
+            g.drawString(getText(), (float) ((getWidth() - bounds.getWidth()) / 2 - bounds.getX()),
+                    (float) ((getHeight() - bounds.getHeight()) / 2 - bounds.getY()));
             g.dispose();
         }
     }
