@@ -50,7 +50,7 @@ class GameServiceTest {
     @BeforeEach
     void setUp() {
         wordService = mock(WordService.class);
-        game = new GameService(wordService);
+        game = new GameService(wordService, new ItemService());
         useWords(words("중", 10, "단어"));
     }
 

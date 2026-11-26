@@ -11,6 +11,7 @@ import static org.mockito.Mockito.when;
 import com.jiphyeonjeon.choseongschool.client.network.TcpConnection;
 import com.jiphyeonjeon.choseongschool.server.entity.Word;
 import com.jiphyeonjeon.choseongschool.server.service.GameService;
+import com.jiphyeonjeon.choseongschool.server.service.ItemService;
 import com.jiphyeonjeon.choseongschool.server.service.WordService;
 import java.net.InetAddress;
 import java.util.ArrayList;
@@ -43,7 +44,7 @@ class GameServiceIntegrationTest {
             words.add(word);
         }
         when(wordService.readByLevel(anyString(), anyInt())).thenReturn(words);
-        GameService game = new GameService(wordService);
+        GameService game = new GameService(wordService, new ItemService());
 
         ExecutorService pool = Executors.newFixedThreadPool(2);
         try (LobbyServer server = new LobbyServer(InetAddress.getLoopbackAddress(), 0, game);
@@ -81,7 +82,7 @@ class GameServiceIntegrationTest {
             assertEquals(ROUNDS * 100, Integer.parseInt(f[2]) + Integer.parseInt(f[4]));
             untilPrefix(secondInbox, "GAME_END|");
             // 끝난 뒤 방이 대기 상태로 돌아와 학칙을 다시 받는다
-            until(firstInbox, "SETTINGS|LOW|10|30");
+            until(firstInbox, "SETTINGS|LOW|10|30|NORMAL");
         } finally {
             pool.shutdownNow();
             game.destroy();

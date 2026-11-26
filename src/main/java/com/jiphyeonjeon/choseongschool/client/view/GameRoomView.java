@@ -30,6 +30,9 @@ import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.Timer;
 
+import com.jiphyeonjeon.choseongschool.common.GameConstants.Item;
+import com.jiphyeonjeon.choseongschool.common.model.ItemKind;
+
 /**
  * 게임 화면 (Figma "4 게임 (한국풍)", 1200×740).
  * 위: 강 팻말 + 문제 두루마리 / 향 타이머 / 훈장님 귀띔(힌트) / 답안 입력 / 아래: 학동 줄(말풍선 · 캐릭터 · 명패 · 점수)
@@ -56,6 +59,19 @@ public class GameRoomView extends JPanel {
     private final Map<String, Seat> seats = new LinkedHashMap<>();
     /** 팻말 둘째 줄의 안내 문구 (예: "난이도 하") */
     private String roundInfo = "";
+    /** 귀띔 상자 아래 안내 (약과에 막히면 바뀐다) */
+    private final JLabel ruleLabel = label(RULE_TEXT, Theme.batang(14), Theme.TEXT_SUB);
+    private static final String RULE_TEXT = "가장 먼저 올린 한 명만 엽전을 얻습니다";
+
+    // 묘수전 아이템 (한 번에 하나만 뜬다)
+    private ItemKind itemKind;          // 떠 있는 아이템. 없으면 null
+    private String itemWord;
+    private double itemStartX;          // 아이템 칸 왼쪽 위의 시작, 끝 위치 (px)
+    private double itemStartY;
+    private double itemEndX;
+    private double itemEndY;
+    private long itemStartTime;
+    private final Timer itemTimer = new Timer(16, e -> repaint()); // 약 60fps로 다시 그림
 
     public GameRoomView() {
         setLayout(new BorderLayout());
@@ -202,6 +218,77 @@ public class GameRoomView extends JPanel {
         secondsLabel.setText(seconds + "초");
     }
 
+    // ===================== 묘수전 아이템 =====================
+
+    /**
+     * 아이템을 띄운다. 좌표는 화면 크기를 1000으로 본 천분율이고, 가장자리(0, 1000)에서는 화면 밖에서 들어온다.
+     * Item.CROSS_MILLIS 동안 시작점에서 끝점까지 직선으로 움직인 뒤 사라진다
+     */
+    public void showItem(ItemKind kind, String word, int startX, int startY, int endX, int endY) {
+        itemKind = kind;
+        itemWord = word;
+        itemStartX = toPixel(startX, getWidth());
+        itemStartY = toPixel(startY, getHeight());
+        itemEndX = toPixel(endX, getWidth());
+        itemEndY = toPixel(endY, getHeight());
+        itemStartTime = System.currentTimeMillis();
+        itemTimer.start();
+    }
+
+    /** 천분율 좌표 → 아이템 칸 왼쪽 위 위치(px). 가장자리면 아이템이 화면 밖에 완전히 숨는 위치 */
+    private static double toPixel(int value, int screenSize) {
+        if (value == 0) {
+            return -Theme.ITEM_SIZE;
+        }
+        if (value == 1000) {
+            return screenSize;
+        }
+        return value * screenSize / 1000.0 - Theme.ITEM_SIZE / 2.0;
+    }
+
+    /** 아이템을 지운다 (누가 먹었거나 라운드가 끝났을 때) */
+    public void hideItem() {
+        itemKind = null;
+        itemTimer.stop();
+        repaint();
+    }
+
+    /** 아이템을 먹은 학동 위 말풍선 */
+    public void showItemBubble(String nickname, ItemKind kind) {
+        Seat seat = seats.get(nickname);
+        if (seat != null) {
+            seat.setBubble(kind.getLabel() + " 획득", Theme.TEXT_SCORE);
+        }
+    }
+
+    /** 약과에 막혔을 때 안내. owner가 null이면 원래 안내로 돌아간다 */
+    public void showBlocked(String owner) {
+        if (owner == null) {
+            ruleLabel.setText(RULE_TEXT);
+            ruleLabel.setForeground(Theme.TEXT_SUB);
+        } else {
+            ruleLabel.setText(owner + " 학동이 약과를 먹어 잠시 답안을 낼 수 없습니다");
+            ruleLabel.setForeground(Theme.RED);
+        }
+    }
+
+    /** 다른 부품을 다 그린 뒤 맨 위에 아이템을 그린다 */
+    @Override
+    protected void paintChildren(Graphics g) {
+        super.paintChildren(g);
+        if (itemKind == null) {
+            return;
+        }
+        double t = (System.currentTimeMillis() - itemStartTime) / (double) Item.CROSS_MILLIS;
+        if (t >= 1) {
+            hideItem(); // 화면을 다 지나감
+            return;
+        }
+        double x = itemStartX + (itemEndX - itemStartX) * t;
+        double y = itemStartY + (itemEndY - itemStartY) * t;
+        ItemPainter.paint((Graphics2D) g, itemKind, itemWord, x, y, Theme.ITEM_SIZE);
+    }
+
     public JTextField getInputField() {
         return inputField;
     }
@@ -296,7 +383,7 @@ public class GameRoomView extends JPanel {
         box.add(hintSeal, c);
         box.add(meaningLabel, c);
         c.insets = new Insets(0, 0, 0, 0);
-        box.add(label("가장 먼저 올린 한 명만 엽전을 얻습니다", Theme.batang(14), Theme.TEXT_SUB), c);
+        box.add(ruleLabel, c);
         return box;
     }
 

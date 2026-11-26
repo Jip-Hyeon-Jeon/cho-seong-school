@@ -2,11 +2,13 @@ package com.jiphyeonjeon.choseongschool.client.controller;
 
 import com.jiphyeonjeon.choseongschool.common.GameConstants.Protocol;
 import com.jiphyeonjeon.choseongschool.client.view.GameRoomView;
+import com.jiphyeonjeon.choseongschool.common.model.ItemKind;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.swing.SwingUtilities;
+import javax.swing.Timer;
 
 /**
  * 게임 화면의 Controller (MVC).
@@ -54,6 +56,14 @@ public class GameRoomController {
     private final Map<String, MessageHandler> handlers = new HashMap<>();
     private GameEndListener gameEndListener;
 
+    /** 내 닉네임 (약과를 내가 먹었는지 구분용) */
+    private String myNickname;
+    /** 지금 문제를 받는 중인지 (문제가 나온 뒤 ~ 정답이 나오거나 라운드가 끝나기 전) */
+    private boolean answering;
+    /** 다른 학동이 약과를 먹어 답안이 막혔는지 */
+    private boolean blocked;
+    private Timer blockTimer;
+
     public GameRoomController(GameRoomView view, MessageSender sender) {
         this.view = view;
         this.sender = sender;
@@ -62,7 +72,8 @@ public class GameRoomController {
 
         handlers.put(Protocol.QUESTION, f -> {
             view.showQuestion(f[1]);
-            view.setInputEnabled(true); // 새 문제가 오면 다시 답을 받는다
+            answering = true; // 새 문제가 오면 다시 답을 받는다
+            updateInput();
         });
         handlers.put(Protocol.HINT, f -> view.showHint(f[1]));
         handlers.put(Protocol.ANSWER, f -> showAnswer(f[1], f[2], f[3].equals(Protocol.CORRECT)));
@@ -71,13 +82,54 @@ public class GameRoomController {
         handlers.put(Protocol.ROUND, f -> view.setRound(Integer.parseInt(f[1]), Integer.parseInt(f[2])));
         handlers.put(Protocol.ROUND_END, f -> {
             view.showRoundEnd(f[1], f[2]);
-            view.setInputEnabled(false); // 뜻풀이 쉬는 시간
+            view.hideItem(); // 라운드가 끝나면 아이템도 사라진다
+            answering = false; // 뜻풀이 쉬는 시간
+            updateInput();
         });
         handlers.put(Protocol.GAME_END, f -> endGame(f));
+
+        // 묘수전
+        handlers.put(Protocol.ITEM, f -> view.showItem(ItemKind.valueOf(f[1]), f[2], Integer.parseInt(f[3]),
+                Integer.parseInt(f[4]), Integer.parseInt(f[5]), Integer.parseInt(f[6])));
+        handlers.put(Protocol.ITEM_GET, f -> {
+            view.hideItem();
+            view.showItemBubble(f[1], ItemKind.valueOf(f[2]));
+        });
+        handlers.put(Protocol.BLOCK, f -> block(f[1], Integer.parseInt(f[2])));
     }
 
     public void setGameEndListener(GameEndListener listener) {
         this.gameEndListener = listener;
+    }
+
+    public void setMyNickname(String nickname) {
+        this.myNickname = nickname;
+    }
+
+    /** 입력칸은 문제를 받는 중이고 약과에 막히지 않았을 때만 열린다 */
+    private void updateInput() {
+        view.setInputEnabled(answering && !blocked);
+    }
+
+    /** BLOCK|먹은 닉네임|초: 내가 먹은 게 아니면 그 시간 동안 입력을 막는다 */
+    private void block(String owner, int seconds) {
+        if (owner.equals(myNickname)) {
+            return;
+        }
+        blocked = true;
+        view.showBlocked(owner);
+        updateInput();
+
+        if (blockTimer != null) {
+            blockTimer.stop(); // 또 막히면 처음부터 다시 센다
+        }
+        blockTimer = new Timer(seconds * 1000, e -> {
+            blocked = false;
+            view.showBlocked(null);
+            updateInput();
+        });
+        blockTimer.setRepeats(false);
+        blockTimer.start();
     }
 
     private void submit() {
@@ -110,7 +162,8 @@ public class GameRoomController {
         view.showBubble(nickname, word, correct);
         if (correct) { // O는 첫 정답자뿐이라 이번 라운드는 끝난 것
             view.jump(nickname);
-            view.setInputEnabled(false);
+            answering = false;
+            updateInput();
         }
     }
 
@@ -123,7 +176,8 @@ public class GameRoomController {
         for (int i = 1; i < f.length; i += 2) {
             scores.add(new FinalScore(f[i], Integer.parseInt(f[i + 1])));
         }
-        view.setInputEnabled(false);
+        answering = false;
+        updateInput();
         if (gameEndListener != null) {
             gameEndListener.onGameEnd(scores);
         }

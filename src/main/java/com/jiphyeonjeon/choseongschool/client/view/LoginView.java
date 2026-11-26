@@ -23,11 +23,12 @@ public class LoginView extends JPanel {
     private static final Font BATANG_BOLD = Theme.batangBold(12);
 
     private static final String[] RULES = {
-            "하나. 처음 들어온 이가 반장이 되어 난이도,총 문제 수, 풀이 시간을 정하옵니다.",
+            "하나. 처음 들어온 이가 반장이 되어 난이도, 총 문제 수, 풀이 시간, 풀이 방식을 정하옵니다.",
             "둘. 반장이 과거를 시작하옵니다. 혼자서도 할 수 있사옵니다.",
             "셋. 초성을 보고 정답을 가장 먼저 맞힌 한 명만 엽전을 얻사옵니다.",
             "넷. 빨리 맞힐수록 엽전이 많사옵니다.",
-            "다섯. 향이 10초만큼 남으면 훈장님의 귀띔이 열리옵니다."
+            "다섯. 향이 10초만큼 남으면 훈장님의 귀띔이 열리옵니다.",
+            "여섯. 묘수전에서 약과를 먹으면 다른 학동의 답안 제출을 막을 수 있사옵니다. 곶감은 1등과 엽전 개수를 바꿀 수 있사옵니다."
     };
 
     // Controller에서 접근할 UI 컴포넌트들
@@ -181,7 +182,7 @@ public class LoginView extends JPanel {
             y = drawWrapped(g2, rule, 718, y, 394);
         }
 
-        drawLeft(g2, "이상 다섯 가지를 삼가 아뢰옵니다.", BATANG_BOLD, 15, Theme.TEXT, 718, 667, 320);
+        drawLeft(g2, "이상 여섯 가지를 삼가 아뢰옵니다.", BATANG_BOLD, 15, Theme.TEXT, 718, 667, 320);
         paintSeal(g2, 1060, 626, 52, 19, 17, "초성", "서당");
     }
 

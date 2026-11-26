@@ -35,7 +35,7 @@ class NetworkCountdownCheckTest {
 
         void denied(String reason) throws Exception {
             expect("ERROR|" + reason);
-            expect("SETTINGS|LOW|10|30");
+            expect("SETTINGS|LOW|10|30|NORMAL");
         }
 
         public void close() { connection.close(); }
@@ -47,13 +47,13 @@ class NetworkCountdownCheckTest {
              Client host = new Client(server, "jisu")) {
             host.expect("WELCOME|1");
             host.expect("PLAYERS|1|1|1|jisu|0");
-            host.expect("SETTINGS|LOW|10|30");
+            host.expect("SETTINGS|LOW|10|30|NORMAL");
             try (Client student = new Client(server, "yuna")) {
                 student.expect("WELCOME|2");
                 String pair = "PLAYERS|1|2|1|jisu|0|2|yuna|0";
                 host.expect(pair);
                 student.expect(pair);
-                student.expect("SETTINGS|LOW|10|30");
+                student.expect("SETTINGS|LOW|10|30|NORMAL");
                 student.connection.send("START");
                 student.denied("NOT_HOST");
                 check(edt(() -> student.controller.state().phase() == RoomState.WAITING), "학동 시작 거부");
@@ -66,7 +66,7 @@ class NetworkCountdownCheckTest {
                 check(edt(() -> !host.view.getStartButton().isVisible()), "시작 버튼 숨김");
                 host.connection.send("START");
                 host.denied("NOT_WAITING");
-                host.connection.send("SET_SETTINGS|HIGH|20|15");
+                host.connection.send("SET_SETTINGS|HIGH|20|15|NORMAL");
                 host.denied("NOT_WAITING");
                 try (Client late = new Client(server, "late")) {
                     late.expect("ERROR|ROOM_BUSY");
@@ -99,11 +99,11 @@ class NetworkCountdownCheckTest {
         }
         // 학동의 퇴장도 동일하게 시작을 취소해야 합니다.
         try (LobbyServer server = new LobbyServer(0); Client host = new Client(server, "jisu")) {
-            host.expect("WELCOME|1"); host.expect("PLAYERS|1|1|1|jisu|0"); host.expect("SETTINGS|LOW|10|30");
+            host.expect("WELCOME|1"); host.expect("PLAYERS|1|1|1|jisu|0"); host.expect("SETTINGS|LOW|10|30|NORMAL");
             try (Client student = new Client(server, "yuna")) {
                 student.expect("WELCOME|2");
                 host.expect("PLAYERS|1|2|1|jisu|0|2|yuna|0");
-                student.expect("PLAYERS|1|2|1|jisu|0|2|yuna|0"); student.expect("SETTINGS|LOW|10|30");
+                student.expect("PLAYERS|1|2|1|jisu|0|2|yuna|0"); student.expect("SETTINGS|LOW|10|30|NORMAL");
                 host.connection.send("START");
                 host.expect("COUNTDOWN|3"); student.expect("COUNTDOWN|3");
                 student.close();

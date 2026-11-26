@@ -19,24 +19,24 @@ class NetworkCheckTest {
             jisu.send("JOIN|최지수|0");
             expect(jisuInbox, "WELCOME|1");
             expect(jisuInbox, "PLAYERS|1|1|1|최지수|0");
-            expect(jisuInbox, "SETTINGS|LOW|10|30");
+            expect(jisuInbox, "SETTINGS|LOW|10|30|NORMAL");
             yuna.send("JOIN|김유나|2");
             expect(yunaInbox, "WELCOME|2");
             String both = "PLAYERS|1|2|1|최지수|0|2|김유나|2";
             expect(jisuInbox, both);
             expect(yunaInbox, both);
-            expect(yunaInbox, "SETTINGS|LOW|10|30");
+            expect(yunaInbox, "SETTINGS|LOW|10|30|NORMAL");
             System.out.println("PASS: 두 클라이언트가 동일한 참가자 목록을 받음");
-            jisu.send("SET_SETTINGS|HIGH|20|15");
-            expect(jisuInbox, "SETTINGS|HIGH|20|15");
-            expect(yunaInbox, "SETTINGS|HIGH|20|15");
-            yuna.send("SET_SETTINGS|LOW|5|30");
+            jisu.send("SET_SETTINGS|HIGH|20|15|NORMAL");
+            expect(jisuInbox, "SETTINGS|HIGH|20|15|NORMAL");
+            expect(yunaInbox, "SETTINGS|HIGH|20|15|NORMAL");
+            yuna.send("SET_SETTINGS|LOW|5|30|NORMAL");
             expect(yunaInbox, "ERROR|NOT_HOST");
-            expect(yunaInbox, "SETTINGS|HIGH|20|15");
+            expect(yunaInbox, "SETTINGS|HIGH|20|15|NORMAL");
             for (String invalid : new String[]{"HIGH|7|15", "UNKNOWN|5|30", "LOW|5|99", "LOW|5", "LOW|5|30|extra"}) {
                 jisu.send("SET_SETTINGS|" + invalid);
                 expect(jisuInbox, "ERROR|BAD_SETTINGS");
-                expect(jisuInbox, "SETTINGS|HIGH|20|15");
+                expect(jisuInbox, "SETTINGS|HIGH|20|15|NORMAL");
             }
             if (!yunaInbox.isEmpty()) throw new AssertionError("거부한 설정이 다른 참가자에게 전파됨");
             System.out.println("PASS: 반장 설정 공유, 학동 요청 거부, 잘못된 값의 전체 변경 거부");
@@ -55,8 +55,8 @@ class NetworkCheckTest {
             expect(yunaInbox, "PLAYERS|2|1|2|김유나|2");
             if (!jisuClosed.await(3, TimeUnit.SECONDS)) throw new AssertionError("퇴장 후 연결이 남음");
             System.out.println("PASS: 반장 퇴장 후 남은 참가자에게 반장 위임");
-            yuna.send("SET_SETTINGS|MEDIUM|15|30");
-            expect(yunaInbox, "SETTINGS|MEDIUM|15|30");
+            yuna.send("SET_SETTINGS|MEDIUM|15|30|NORMAL");
+            expect(yunaInbox, "SETTINGS|MEDIUM|15|30|NORMAL");
             try (TcpConnection next = new TcpConnection("127.0.0.1", server.getPort())) {
                 BlockingQueue<String> inbox = new LinkedBlockingQueue<>();
                 next.startReceiving(inbox::add, () -> { });
@@ -64,7 +64,7 @@ class NetworkCheckTest {
                 expect(inbox, "WELCOME|3");
                 String pair = "PLAYERS|2|2|2|김유나|2|3|송서영|3";
                 expect(inbox, pair);
-                expect(inbox, "SETTINGS|MEDIUM|15|30");
+                expect(inbox, "SETTINGS|MEDIUM|15|30|NORMAL");
                 expect(yunaInbox, pair);
                 next.close(); // QUIT 없이 끊어도 서버가 퇴장을 처리해야 합니다.
                 expect(yunaInbox, "PLAYERS|2|1|2|김유나|2");

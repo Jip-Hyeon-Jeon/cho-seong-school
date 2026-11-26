@@ -3,6 +3,7 @@ package com.jiphyeonjeon.choseongschool.server;
 import com.jiphyeonjeon.choseongschool.common.GameConstants.Protocol;
 import com.jiphyeonjeon.choseongschool.common.LobbyConstants;
 import com.jiphyeonjeon.choseongschool.common.model.Difficulty;
+import com.jiphyeonjeon.choseongschool.common.model.GameMode;
 import com.jiphyeonjeon.choseongschool.common.model.LobbySettings;
 import com.jiphyeonjeon.choseongschool.common.model.ParticipantInfo;
 import com.jiphyeonjeon.choseongschool.common.model.RoomState;
@@ -131,9 +132,9 @@ public final class LobbyServer implements AutoCloseable {
             error = "NOT_WAITING";
         } else {
             try {
-                if (fields.length != 4) throw new IllegalArgumentException();
-                settings = new LobbySettings(Difficulty.valueOf(fields[1]),
-                        Integer.parseInt(fields[2]), Integer.parseInt(fields[3])); // 세 값 검증 후 일괄 적용
+                if (fields.length != 5) throw new IllegalArgumentException();
+                settings = new LobbySettings(Difficulty.valueOf(fields[1]), Integer.parseInt(fields[2]),
+                        Integer.parseInt(fields[3]), GameMode.valueOf(fields[4])); // 네 값 검증 후 일괄 적용
             } catch (IllegalArgumentException e) {
                 error = "BAD_SETTINGS";
             }

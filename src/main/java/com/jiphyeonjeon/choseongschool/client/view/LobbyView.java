@@ -1,6 +1,7 @@
 package com.jiphyeonjeon.choseongschool.client.view;
 
 import com.jiphyeonjeon.choseongschool.common.model.Difficulty;
+import com.jiphyeonjeon.choseongschool.common.model.GameMode;
 import com.jiphyeonjeon.choseongschool.common.model.LobbySettings;
 import com.jiphyeonjeon.choseongschool.client.model.LobbyState;
 import com.jiphyeonjeon.choseongschool.common.model.ParticipantInfo;
@@ -27,6 +28,8 @@ public class LobbyView extends JPanel {
     private final ButtonGroup levels = new ButtonGroup();
     private final ButtonGroup rounds = new ButtonGroup();
     private final ButtonGroup seconds = new ButtonGroup();
+    /** 방식: 일반전(NORMAL), 묘수전(ITEM, 아이템전) */
+    private final ButtonGroup modes = new ButtonGroup();
     private final BufferedImage[] portraits = new BufferedImage[5];
     /** 마지막으로 그린 상태 (그리기 전용, 이 화면이 바꾸지 않는다) */
     private LobbyState state = new LobbyState();
@@ -69,6 +72,7 @@ public class LobbyView extends JPanel {
         addOptions("난이도", levels, new String[]{"하", "중", "상"}, new String[]{"LOW", "MEDIUM", "HIGH"}, 0, 110);
         addOptions("총 문제 수", rounds, new String[]{"5", "10", "15", "20"}, new String[]{"5", "10", "15", "20"}, 1, 290);
         addOptions("풀이 시간", seconds, new String[]{"30초", "15초"}, new String[]{"30", "15"}, 0, 535);
+        addOptions("방식", modes, new String[]{"일반전", "묘수전"}, new String[]{"NORMAL", "ITEM"}, 0, 680, 72);
         place(status, 100, 310, 1000, 40);
         start.setBackground(Theme.RED);
         start.setForeground(Theme.TEXT_LIGHT);
@@ -124,6 +128,12 @@ public class LobbyView extends JPanel {
     }
 
     private void addOptions(String title, ButtonGroup group, String[] labels, String[] values, int selected, int x) {
+        addOptions(title, group, labels, values, selected, x, 48);
+    }
+
+    /** width: 팻말 한 개의 너비 (팻말 사이 간격은 6) */
+    private void addOptions(String title, ButtonGroup group, String[] labels, String[] values, int selected, int x,
+            int width) {
         JLabel heading = label(title, 16);
         heading.setHorizontalAlignment(SwingConstants.LEFT);
         place(heading, x, 213, 150, 26);
@@ -140,7 +150,7 @@ public class LobbyView extends JPanel {
             group.add(option);
             option.setSelected(i == selected);
             styleOption(option);
-            place(option, x + i * 54, 243, 48, 34);
+            place(option, x + i * (width + 6), 243, width, 34);
         }
     }
 
@@ -211,6 +221,7 @@ public class LobbyView extends JPanel {
     public int getSelectedRounds() { return Integer.parseInt(rounds.getSelection().getActionCommand()); }
     public int getSelectedSeconds() { return Integer.parseInt(seconds.getSelection().getActionCommand()); }
     public Difficulty getSelectedDifficulty() { return Difficulty.valueOf(levels.getSelection().getActionCommand()); }
+    public GameMode getSelectedMode() { return GameMode.valueOf(modes.getSelection().getActionCommand()); }
 
     /** 학칙 버튼을 누르면 고른 학칙을 넘길 곳 (컨트롤러가 권한 확인 후 서버로 전송) */
     public void setSettingsRequest(java.util.function.Consumer<LobbySettings> request) {
@@ -218,7 +229,8 @@ public class LobbyView extends JPanel {
     }
 
     private void requestSettings() {
-        LobbySettings proposed = new LobbySettings(getSelectedDifficulty(), getSelectedRounds(), getSelectedSeconds());
+        LobbySettings proposed = new LobbySettings(getSelectedDifficulty(), getSelectedRounds(), getSelectedSeconds(),
+                getSelectedMode());
         // 서버가 확정하기 전까지는 기존 학칙을 표시
         selectSettings(state.settings());
         if (settingsRequest != null) settingsRequest.accept(proposed);
@@ -228,6 +240,7 @@ public class LobbyView extends JPanel {
         select(levels, settings.difficulty().name());
         select(rounds, Integer.toString(settings.rounds()));
         select(seconds, Integer.toString(settings.seconds()));
+        select(modes, settings.mode().name());
     }
 
     private static void select(ButtonGroup group, String command) {

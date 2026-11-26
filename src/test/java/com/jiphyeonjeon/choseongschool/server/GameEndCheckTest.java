@@ -42,7 +42,7 @@ class GameEndCheckTest {
             jisu.send("JOIN|지수|0");
             expect(inbox, "WELCOME|1");
             expect(inbox, "PLAYERS|1|1|1|지수|0");
-            expect(inbox, "SETTINGS|LOW|10|30");
+            expect(inbox, "SETTINGS|LOW|10|30|NORMAL");
 
             jisu.send("START");
             expect(inbox, "COUNTDOWN|3");
@@ -50,7 +50,7 @@ class GameEndCheckTest {
             expect(inbox, "COUNTDOWN|1");
             expect(inbox, "GAME_START");
             expect(inbox, "GAME_END|지수|10");
-            expect(inbox, "SETTINGS|LOW|10|30"); // 대기 상태 복귀 후 학칙 다시 공유
+            expect(inbox, "SETTINGS|LOW|10|30|NORMAL"); // 대기 상태 복귀 후 학칙 다시 공유
 
             // 끝난 게임이 늦게 보내는 메시지는 전달되지 않는다
             game.lastBroadcast.get().accept("QUESTION|늦은 문제");

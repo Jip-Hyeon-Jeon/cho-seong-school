@@ -22,9 +22,21 @@ public class WordService {
 	
 	//READ: 난이도에 맞는 단어를 섞어서 count개 조회.
 	public List<Word> readByLevel(String level, int count) {
-		List<Word> words = new ArrayList<>(wordRepository.findByLevel(level));	//해당 난이도 해당하는 전체 단어 목록 가져옴
-		Collections.shuffle(words);		//단어 목록을 섞음
-		return words.subList(0, Math.min(count, words.size()));		//전체 단어 목록에서 총 문제 수만큼만 뽑아서 전달. 만약 count개가 전체 단어 목록 수보다 많을 경우 전체 단어 목록 리턴
+		List<Word> words = wordRepository.findByLevel(level);	//해당 난이도 해당하는 전체 단어 목록 가져옴
+		Collections.shuffle(words);								//단어 목록을 섞음
+		return words.subList(0, Math.min(count, words.size()));	//전체 단어 목록에서 총 문제 수만큼만 뽑아서 전달. 만약 count개가 전체 단어 목록 수보다 많을 경우 전체 단어 목록 리턴
+	}
+
+	//READ: 묘수전 아이템에 넣을 네 글자 단어 전체
+	public List<String> readItemWords() {
+		List<String> words = new ArrayList<>();			//아이템 단어 목록
+		
+		for (Word word : wordRepository.findAll()) {	//전체 단어 목록 순회하면서
+			if (word.getWord().length() == 4) {			//단어의 길이가 4일 경우 아이템 단어 목록에 넣음
+				words.add(word.getWord());
+			}
+		}
+		return words;
 	}
 
 }
