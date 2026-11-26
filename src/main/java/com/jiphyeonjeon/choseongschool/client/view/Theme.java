@@ -38,6 +38,8 @@ public final class Theme {
     public static final int PORTRAIT_SIZE = 92;
     /** 큰 초상 크기 (로그인, 결과의 장원) */
     public static final int PORTRAIT_SIZE_LARGE = 150;
+    /** 묘수전 아이템(곶감, 약과) 크기 */
+    public static final int ITEM_SIZE = 85;
 
     // ---- 색: 글자 ----
     /** 기본 글자, 진한 테두리 */
@@ -94,6 +96,38 @@ public final class Theme {
     public static final Color FLOOR_LINE = new Color(0x5A3B22);
     /** 향 */
     public static final Color INCENSE = new Color(0xA8743F);
+
+    // ---- 색: 묘수전 아이템 ----
+    /** 곶감 몸통 */
+    public static final Color GOTGAM = new Color(0xF0922E);
+    /** 곶감 아래쪽 그늘 */
+    public static final Color GOTGAM_SHADE = new Color(0xE07E22);
+    /** 곶감 테두리 */
+    public static final Color GOTGAM_LINE = new Color(0xB85E1A);
+    /** 곶감 잎 */
+    public static final Color LEAF = new Color(0x7DB840);
+    /** 곶감 꼭지 */
+    public static final Color LEAF_DARK = new Color(0x4E9A2E);
+    /** 곶감 잎 테두리 */
+    public static final Color LEAF_LINE = new Color(0x3F7A26);
+    /** 곶감 꼭지 가운데 */
+    public static final Color STEM = new Color(0x2F5E1C);
+    /** 약과 받침 */
+    public static final Color YAKGWA_BASE = new Color(0xC8772E);
+    /** 약과 꽃잎 (밝은 쪽) */
+    public static final Color YAKGWA_PETAL = new Color(0xE9A04A);
+    /** 약과 꽃잎 (진한 쪽) */
+    public static final Color YAKGWA_PETAL_DARK = new Color(0xD9863A);
+    /** 약과 가운데 판 */
+    public static final Color YAKGWA_CENTER = new Color(0xE69A44);
+    /** 약과 가운데 안쪽 */
+    public static final Color YAKGWA_INNER = new Color(0xF0AE5A);
+    /** 약과 가운데 안쪽 테두리 */
+    public static final Color YAKGWA_INNER_LINE = new Color(0xC27530);
+    /** 약과 오목 무늬 */
+    public static final Color YAKGWA_DOT = new Color(0xC97A2E);
+    /** 약과 테두리 */
+    public static final Color YAKGWA_LINE = new Color(0x9A561C);
 
     // ---- 색: 지폐, 동전 (캐릭터 번호 순) ----
     private static final Color[] MONEY_COLORS = {

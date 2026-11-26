@@ -76,11 +76,12 @@ UTF-8 한 줄 메시지, 구분자 `|`, 최대 4096자. 아래 규약은 팀 리
 |---|---|
 | 입장 요청 / 응답 | `JOIN|닉네임|캐릭터번호` / `WELCOME|참가자ID` |
 | 참가자 목록 | `PLAYERS|반장ID|인원수|ID|닉네임|캐릭터번호|...` |
-| 설정 요청 / 공유 | `SET_SETTINGS|LOW/MEDIUM/HIGH|5/10/15/20|15/30` / `SETTINGS|난이도|문제수|초` |
+| 설정 요청 / 공유 | `SET_SETTINGS|LOW/MEDIUM/HIGH|5/10/15/20|15/30|NORMAL/ITEM` / `SETTINGS|난이도|문제수|초|방식` |
 | 시작 요청 / 진행 | `START` / `COUNTDOWN|3`, `COUNTDOWN|2`, `COUNTDOWN|1`, `GAME_START` |
 | 시작 취소 / 퇴장 / 오류 | `START_CANCELLED|PLAYER_LEFT` / `QUIT` / `ERROR|오류코드` |
 | 답 제출 / 결과 | `ANSWER|단어` / `ANSWER|닉네임|단어|O/X` |
 | 문제 / 힌트 | `QUESTION|초성` / `HINT|뜻` |
+| 묘수전 아이템 / 획득 / 약과 | `ITEM|GOTGAM/YAKGWA|단어|시작x|시작y|끝x|끝y` / `ITEM_GET|닉네임|종류` / `BLOCK|닉네임|초` |
 
 기본 학칙은 하/10문제/30초다. 게임 중 새 입장과 설정 변경은 거부한다.
 문제 타이머의 남은 시간 메시지와 게임 종료 후 대기실 복귀 규약은 아직 없다.

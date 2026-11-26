@@ -107,9 +107,15 @@ public final class ClientFlow {
             gameController = new GameRoomController(gameView, client::send); // 같은 소켓으로 답 제출
             gameController.setGameEndListener(this::showResult);
             characters.clear();
-            session.players().forEach(p -> characters.put(p.nickname(), p.character()));
+            for (ParticipantInfo p : session.players()) {
+                characters.put(p.nickname(), p.character());
+                if (p.id().equals(session.localId())) {
+                    gameController.setMyNickname(p.nickname()); // 약과를 내가 먹었는지 구분용
+                }
+            }
             LobbySettings settings = session.settings();
-            gameView.setRound(1, settings.rounds(), "난이도 " + settings.difficulty().getLabel());
+            gameView.setRound(1, settings.rounds(),
+                    "난이도 " + settings.difficulty().getLabel() + " · " + settings.mode().getLabel());
             gameView.setTimeLeft(settings.seconds(), settings.seconds());
             showPlayers(session.players(), session.hostId());
             host.show(gameView);

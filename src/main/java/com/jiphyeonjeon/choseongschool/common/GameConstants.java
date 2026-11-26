@@ -58,7 +58,41 @@ public final class GameConstants {
         /** 게임 종료·최종 점수(서버→전원): GAME_END|닉네임|점수|닉네임|점수|... */
         public static final String GAME_END = "GAME_END";
 
+        /** 묘수전 아이템 등장(서버→전원): ITEM|GOTGAM 또는 YAKGWA|단어|시작x|시작y|끝x|끝y (좌표는 화면 가장자리 위의 점, 천분율) */
+        public static final String ITEM = "ITEM";
+
+        /** 아이템 획득(서버→전원): ITEM_GET|닉네임|GOTGAM 또는 YAKGWA */
+        public static final String ITEM_GET = "ITEM_GET";
+
+        /** 약과 효과(서버→전원): BLOCK|먹은 닉네임|초. 먹은 학동을 뺀 나머지는 그동안 답안을 낼 수 없다 */
+        public static final String BLOCK = "BLOCK";
+
         private Protocol() {
+        }
+    }
+
+    /** [공용, 서버] 묘수전 아이템 */
+    public static final class Item {
+
+        /** [서버] 라운드마다 아이템이 나올 확률 */
+        public static final double CHANCE_PER_ROUND = 1;
+
+        /** [서버] 곶감 아이템이 등장할 확률 (나머지는 약과) */
+        public static final double GOTGAM_RATIO = 0.3;
+
+        /** [공용] 아이템이 화면을 가로질러 사라질 때까지 걸리는 시간(ms). 경로가 길면 그만큼 빨라진다 */
+        public static final int CROSS_MILLIS = 5000;
+
+        /** [서버] 약과 아이템이 다른 사용자의 답안 제출을 막는 시간(초) */
+        public static final int BLOCK_SECONDS = 5;
+
+        /** [서버] 문제가 나온 뒤 아이템이 나오기까지 최소 대기 시간(ms) */
+        public static final int MIN_DELAY_MS = 1500;
+
+        /** [서버] 문제가 나온 뒤 아이템이 나오기까지 최대 대기 시간(ms) */
+        public static final int MAX_DELAY_MS = 5000;
+
+        private Item() {
         }
     }
 }

@@ -1,11 +1,15 @@
 package com.jiphyeonjeon.choseongschool.server.service;
 
+import com.jiphyeonjeon.choseongschool.common.GameConstants;
 import com.jiphyeonjeon.choseongschool.common.GameConstants.Protocol;
 import com.jiphyeonjeon.choseongschool.server.entity.Word;
+import com.jiphyeonjeon.choseongschool.common.model.GameMode;
+import com.jiphyeonjeon.choseongschool.common.model.ItemKind;
 import com.jiphyeonjeon.choseongschool.common.model.LobbySettings;
 import com.jiphyeonjeon.choseongschool.common.model.ParticipantInfo;
 import com.jiphyeonjeon.choseongschool.common.network.LineMessages;
 import com.jiphyeonjeon.choseongschool.server.GameEvents;
+import com.jiphyeonjeon.choseongschool.common.model.Item;
 import com.jiphyeonjeon.choseongschool.server.timer.RoundTimer;
 import com.jiphyeonjeon.choseongschool.server.timer.TimerListener;
 import org.springframework.beans.factory.DisposableBean;
@@ -17,6 +21,7 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.function.Consumer;
 
 /**
@@ -46,6 +51,7 @@ public class GameService implements GameEvents, DisposableBean {
     }
 
     private final WordService wordService;
+    private final Random random = new Random();
 
     // 아래 상태는 모두 synchronized(this) 안에서만 읽고 쓴다
     // 플레이어와 점수를 한 맵으로 관리 (두 맵이 어긋나는 문제 방지)
@@ -63,8 +69,11 @@ public class GameService implements GameEvents, DisposableBean {
     private boolean roundActive;
     private long epoch;                    // 라운드 시작/게임 종료/방 비움마다 증가
 
-    public GameService(WordService wordService) {
+    private final ItemService itemService; // 아이템전 관리자
+
+    public GameService(WordService wordService, ItemService itemService) {
         this.wordService = wordService;
+        this.itemService = itemService;
     }
 
     @Override
@@ -98,12 +107,17 @@ public class GameService implements GameEvents, DisposableBean {
             System.err.println("문제를 가져오지 못함: " + e);
             words = List.of(); // 문제가 없으면 바로 게임을 끝내 방이 대기 상태로 돌아가게 한다
         }
+        List<String> wordsForItems = List.of();
+        if (settings.mode() == GameMode.ITEM) {
+            wordsForItems = wordService.readItemWords();
+        }
         List<String> out = new ArrayList<>();
         RoundTimer timer;
         long roundEpoch;
         synchronized (this) {
             if (epoch != startEpoch || finished) return; // 조회하는 동안 방이 비었거나 새 게임이 시작됨
             roundWords = words;
+            itemService.startGame(wordsForItems);
             addScores(out);
             timer = prepareNextRound(out);
             roundEpoch = epoch;
@@ -155,6 +169,7 @@ public class GameService implements GameEvents, DisposableBean {
                     timeOut(roundEpoch);
                 }
             });
+            planItem(roundEpoch);
             return currentTimer;
         }
         finishGame(out);
@@ -171,7 +186,7 @@ public class GameService implements GameEvents, DisposableBean {
         }
     }
 
-    // 플레이어 정답 입력
+    // 사용자 정답 입력
     @Override
     public void onAnswer(ParticipantInfo player, String answer, Consumer<String> unused) {
         List<String> out = new ArrayList<>();
@@ -179,18 +194,99 @@ public class GameService implements GameEvents, DisposableBean {
             // 게임에 없는 사람(이미 나간 사람 등)의 입력은 무시
             PlayerState state = players.get(player.id());
             if (finished || state == null || currentWord == null) return;
-
-            // O는 이번 라운드의 첫 정답자뿐이다. 오답이거나 이미 끝난 라운드의 답은 X
+            
+            // 약과에 막힌 사용자의 답안은 버림
+            if (itemService.isBlocked(player.id())) return; 
+            
             String trimmed = answer.trim();
-            boolean correct = roundActive && normalize(trimmed).equals(currentAnswer);
-            out.add(line(Protocol.ANSWER, player.nickname(), trimmed, correct ? Protocol.CORRECT : Protocol.WRONG));
-            if (correct) {
-                state.score += BASE_SCORE;
-                out.add(line(Protocol.SCORE, player.nickname(), state.score));
-                endRound(out);
+            Item item = itemService.take(trimmed); // 사용자가 아이템을 획득했는지 확인
+            if (item != null) {
+                useItem(item, player, state, out); // 아이템 단어면 정답 판정 대신 아이템 사용
+            } else {
+                judge(player, state, trimmed, out);
             }
         }
         flush(out);
+    }
+
+    /** 정답 판정. O는 이번 라운드의 첫 정답자뿐이다. 오답이거나 이미 끝난 라운드의 답은 X. synchronized(this) 안에서만 부른다 */
+    private void judge(ParticipantInfo player, PlayerState state, String trimmed, List<String> out) {
+        boolean correct = roundActive && normalize(trimmed).equals(currentAnswer);
+        out.add(line(Protocol.ANSWER, player.nickname(), trimmed, correct ? Protocol.CORRECT : Protocol.WRONG));
+        if (correct) {
+            state.score += BASE_SCORE;
+            out.add(line(Protocol.SCORE, player.nickname(), state.score));
+            endRound(out);
+        }
+    }
+
+    // ===================== 묘수전 아이템 (규칙은 ItemService) =====================
+
+    /** 이번 라운드에 아이템을 낼지 정하고, 낸다면 잠시 뒤에 띄운다. synchronized(this) 안에서만 부른다 */
+    private void planItem(long roundEpoch) {
+        if (settings.mode() != GameMode.ITEM) {
+            return;
+        }
+        boolean lastRound = currentRoundIndex == roundWords.size();
+        if (!itemService.shouldShow(lastRound)) {
+            return;
+        }
+        int delay = itemService.delayMillis(lastRound);
+        runInThread("game-item", () -> {
+            try {
+                Thread.sleep(delay);
+            } catch (InterruptedException e) {
+                return;
+            }
+            showItem(roundEpoch);
+        });
+    }
+
+    /** 아이템을 띄운다. 그 사이 라운드가 끝났으면 띄우지 않는다 */
+    private void showItem(long roundEpoch) {
+        String line;
+        synchronized (this) {
+            if (!roundActive || epoch != roundEpoch) {
+                return;
+            }
+            line = itemService.show(currentWord.getWord());
+        }
+        if (line != null) {
+            flush(List.of(line));
+        }
+    }
+
+    /** 먹은 아이템의 효과를 적용한다. synchronized(this) 안에서만 부른다 */
+    private void useItem(Item item, ParticipantInfo player, PlayerState state, List<String> out) {
+        out.add(line(Protocol.ITEM_GET, player.nickname(), item.getKind().name()));
+
+        if (item.getKind() == ItemKind.GOTGAM) {
+            // 1등과 점수를 바꾼다
+            PlayerState top = findTop();
+            int temp = top.score;
+            top.score = state.score;
+            state.score = temp;
+            out.add(line(Protocol.SCORE, player.nickname(), state.score));
+            out.add(line(Protocol.SCORE, top.info.nickname(), top.score));
+        } else {
+            itemService.block(player.id());
+            out.add(line(Protocol.BLOCK, player.nickname(), GameConstants.Item.BLOCK_SECONDS));
+        }
+    }
+
+    /** 점수가 가장 높은 학동. 공동 1등이면 그중 무작위 한 명. synchronized(this) 안에서만 부른다 */
+    private PlayerState findTop() {
+        int best = -1;
+        for (PlayerState p : players.values()) {
+            best = Math.max(best, p.score);
+        }
+        List<PlayerState> tops = new ArrayList<>();
+        for (PlayerState p : players.values()) {
+            if (p.score == best) {
+                tops.add(p);
+            }
+        }
+        return tops.get(random.nextInt(tops.size()));
     }
 
     /** 시간이 다 됐을 때 (타이머 스레드에서 호출) */
@@ -207,6 +303,7 @@ public class GameService implements GameEvents, DisposableBean {
     private void endRound(List<String> out) {
         roundActive = false;
         stopCurrentTimer();
+        itemService.hideItem(); // 라운드가 끝나면 떠 있던 아이템도 사라진다 (화면은 ROUND_END를 받고 지운다)
         out.add(line(Protocol.ROUND_END, currentWord.getWord(), currentWord.getMeaning()));
         scheduleNextRound();
     }
@@ -310,6 +407,7 @@ public class GameService implements GameEvents, DisposableBean {
         epoch++;
         roundActive = false;
         stopCurrentTimer();
+        itemService.clear();
         if (nextRoundThread != null) {
             if (nextRoundThread != Thread.currentThread()) {
                 nextRoundThread.interrupt();
