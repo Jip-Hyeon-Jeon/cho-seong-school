@@ -81,7 +81,7 @@ class GameServiceIntegrationTest {
             assertEquals(ROUNDS * 100, Integer.parseInt(f[2]) + Integer.parseInt(f[4]));
             untilPrefix(secondInbox, "GAME_END|");
             // 끝난 뒤 방이 대기 상태로 돌아와 학칙을 다시 받는다
-            until(firstInbox, "SETTINGS|LOW|10|30");
+            until(firstInbox, "SETTINGS|LOW|10|30|NORMAL");
         } finally {
             pool.shutdownNow();
             game.destroy();

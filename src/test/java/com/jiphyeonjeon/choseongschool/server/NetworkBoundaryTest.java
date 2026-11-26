@@ -33,7 +33,7 @@ class NetworkBoundaryTest {
                 BlockingQueue<String> inbox = new LinkedBlockingQueue<>();
                 first.startReceiving(inbox::add, () -> { });
                 first.send("JOIN|jisu|0");
-                until(inbox, "SETTINGS|LOW|10|30");
+                until(inbox, "SETTINGS|LOW|10|30|NORMAL");
                 first.send("START");
                 until(inbox, "GAME_START");
                 first.send("ANSWER|학교|가짜이름");
@@ -51,7 +51,7 @@ class NetworkBoundaryTest {
                 BlockingQueue<String> inbox = new LinkedBlockingQueue<>();
                 next.startReceiving(inbox::add, () -> { });
                 next.send("JOIN|yuna|2");
-                until(inbox, "SETTINGS|LOW|10|30");
+                until(inbox, "SETTINGS|LOW|10|30|NORMAL");
                 next.send("START");
                 until(inbox, "GAME_START");
                 // onStart 실행 완료를 보장하기 위해 같은 방 이벤트 경로로 답안 한 개를 왕복합니다.

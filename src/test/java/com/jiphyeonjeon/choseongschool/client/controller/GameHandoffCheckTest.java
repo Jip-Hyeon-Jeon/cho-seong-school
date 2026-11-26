@@ -32,7 +32,7 @@ final class GameHandoffCheckTest {
         NetworkLobbyController controller = new NetworkLobbyController(view.get(), listener);
         controller.handle("WELCOME|1");
         controller.handle("PLAYERS|1|2|1|jisu|0|2|yuna|2");
-        controller.handle("SETTINGS|HIGH|20|15");
+        controller.handle("SETTINGS|HIGH|20|15|NORMAL");
         controller.handle("QUESTION|시작 전 무시");
         controller.handle("TIME|30|30"); // 시작 전 게임 메시지는 무시
         controller.handle("GAME_START"); // 유효한 카운트다운을 거치지 않음

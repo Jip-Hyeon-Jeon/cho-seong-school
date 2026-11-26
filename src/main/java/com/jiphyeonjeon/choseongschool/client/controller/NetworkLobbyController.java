@@ -4,6 +4,7 @@ import com.jiphyeonjeon.choseongschool.common.GameConstants.Protocol;
 import com.jiphyeonjeon.choseongschool.client.GameScreenListener;
 import com.jiphyeonjeon.choseongschool.common.LobbyConstants;
 import com.jiphyeonjeon.choseongschool.common.model.Difficulty;
+import com.jiphyeonjeon.choseongschool.common.model.GameMode;
 import com.jiphyeonjeon.choseongschool.client.model.GameSession;
 import com.jiphyeonjeon.choseongschool.common.model.LobbySettings;
 import com.jiphyeonjeon.choseongschool.client.model.LobbyState;
@@ -86,9 +87,9 @@ public final class NetworkLobbyController {
                     if (isPlaying()) gameScreen.onPlayers(state.participants());
                 }
                 case "SETTINGS" -> {
-                    if (state.localId() == null || fields.length != 4) return;
+                    if (state.localId() == null || fields.length != 5) return;
                     state.confirmSettings(new LobbySettings(Difficulty.valueOf(fields[1]),
-                            Integer.parseInt(fields[2]), Integer.parseInt(fields[3])));
+                            Integer.parseInt(fields[2]), Integer.parseInt(fields[3]), GameMode.valueOf(fields[4])));
                     view.render(state);
                 }
                 case "COUNTDOWN" -> {
