@@ -72,6 +72,7 @@ public class GameRoomController {
 
         handlers.put(Protocol.QUESTION, f -> {
             view.showQuestion(f[1]);
+            view.getInputField().setText(""); // 전 라운드에 쓰다 만 답을 지운다
             answering = true; // 새 문제가 오면 다시 답을 받는다
             updateInput();
         });
@@ -175,6 +176,9 @@ public class GameRoomController {
         List<FinalScore> scores = new ArrayList<>();
         for (int i = 1; i < f.length; i += 2) {
             scores.add(new FinalScore(f[i], Integer.parseInt(f[i + 1])));
+        }
+        if (blockTimer != null) {
+            blockTimer.stop(); // 결과 화면으로 넘어간 뒤 게임 화면을 건드리지 않게 한다
         }
         answering = false;
         updateInput();
