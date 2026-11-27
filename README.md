@@ -55,7 +55,7 @@ JAVA프로그래밍및실습II 팀 프로젝트(집현전)입니다.
 
 ## 기술 스택
 
-- Java 21, Gradle
+- Spring Boot, Java 21, Gradle
 - 화면: Swing
 - 통신: Socket(TCP), Thread
 - 데이터: Spring Boot, Spring Data JPA, MariaDB (단어 조회)
