@@ -1,7 +1,57 @@
-# 초성서당 (Cho-Seong-School)
+# 🖌️초성서당🏫 (Cho-Seong-School)
 
-초성 힌트를 보고 단어를 맞히는 멀티플레이어 퀴즈 게임입니다. 최대 5명이 같은 대기실에 모여 반장이 정한 학칙(난이도·문제 수·풀이 시간)으로 겨룹니다.
+초성 힌트를 보고 단어를 맞히는 멀티플레이어 퀴즈 게임입니다. 최대 5명이 같은 대기실에 모여 반장이 정한 학칙(난이도, 총 문제 수, 풀이 시간, 게임 방식)으로 겨룹니다.
 JAVA프로그래밍및실습II 팀 프로젝트(집현전)입니다.
+
+### [📸시연 영상 보러가기](https://youtu.be/Vzk1FNP1NrY?si=Dz51rix_5FtCv_xm)
+
+## 💁‍♂️ 프로젝트 팀원
+<table>
+  <tr height="160px">
+    <td width="300px" align="center">
+      <a href="https://github.com/aJISUa">
+        <img height="150px" width="150px" src="https://avatars.githubusercontent.com/aJISUa" />
+      </a>
+    </td>
+    <td width="300px" align="center">
+      <a href="https://github.com/HongYeonLee">
+        <img height="150px" width="150px" src="https://avatars.githubusercontent.com/HongYeonLee" />
+      </a>
+    </td>
+    <td width="300px" align="center">
+      <a href="https://github.com/kuna051015">
+        <img height="150px" width="150px" src="https://avatars.githubusercontent.com/kuna051015" />
+      </a>
+    </td>
+    <td width="300px" align="center">
+      <a href="https://github.com/C0reta">
+        <img height="150px" width="150px" src="https://avatars.githubusercontent.com/C0reta" />
+      </a>
+    </td>
+  </tr>
+  <tr height="30px">
+    <td align="center">
+      <a href="https://github.com/aJISUa">
+        <b>최지수</b>
+      </a>
+    </td>
+    <td align="center">
+      <a href="https://github.com/HongYeonLee">
+        <b>이홍연</b>
+      </a>
+    </td>
+    <td align="center">
+      <a href="https://github.com/kuna051015">
+        <b>김유나</b>
+      </a>
+    </td>
+    <td align="center">
+      <a href="https://github.com/C0reta">
+        <b>송서영</b>
+      </a>
+    </td>
+  </tr>
+</table>
 
 ## 기술 스택
 
@@ -12,7 +62,7 @@ JAVA프로그래밍및실습II 팀 프로젝트(집현전)입니다.
 
 ## 화면 흐름
 
-로그인 → 대기실(학칙 설정, 3-2-1 카운트다운) → 게임(문제·힌트·정답 입력) → 결과 → 대기실 또는 로그인
+로그인 → 대기실(학칙 설정, 3-2-1 카운트다운) → 게임(문제, 힌트, 정답 입력, 아이템) → 결과 → 대기실 또는 로그인
 
 ## 실행 방법
 
