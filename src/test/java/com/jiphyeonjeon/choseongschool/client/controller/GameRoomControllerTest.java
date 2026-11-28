@@ -58,6 +58,11 @@ class GameRoomControllerTest {
         public void setInputEnabled(boolean enabled) {
             calls.add("I:" + enabled);
         }
+
+        @Override
+        public void showBlocked(String owner) {
+            calls.add("B:" + owner);
+        }
     }
 
     private final RecordingView view = new RecordingView();
@@ -106,6 +111,23 @@ class GameRoomControllerTest {
                 "ROUND_END|사필귀정", "GAME_END|유나", "GAME_END|유나|10|지수", "GAME_END|유나|열");
         assertEquals(List.of(), view.calls);
         assertEquals(List.of(), ended);
+    }
+
+    @Test
+    void 새_문제가_오면_입력칸을_비운다() throws Exception {
+        view.getInputField().setText("사필귀");
+        handleAll("QUESTION|ㅅㅍㄱㅈ");
+        assertEquals("", view.getInputField().getText());
+    }
+
+    @Test
+    void 게임이_끝나면_약과_타이머를_멈춘다() throws Exception {
+        controller.setMyNickname("유나");
+        handleAll("BLOCK|지수|1", "GAME_END|유나|300|지수|120");
+        Thread.sleep(1500); // 타이머가 멈추지 않았다면 이때 막힘이 풀린다
+        SwingUtilities.invokeAndWait(() -> { });
+        // 막힘이 풀릴 때 나오는 "B:null"이 없어야 한다
+        assertEquals(List.of("B:지수", "I:false", "I:false"), view.calls);
     }
 
     @Test
